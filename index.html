@@ -1,0 +1,1540 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Система Dealer Mobility</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Google+Sans:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap">
+<style>
+/* Сцена 1920×1080 масштабируется по ширине; справа от неё — список разделов; один общий фон */
+
+/* Кадр 1920×1080: телефон слева, подписи справа */
+ #dm-root{--accent:#0e7c86;--ink:#1c1c1e;--text:#3a3a3c;--grey:#8e8e93;--line:#e6e6ea;--feed:#f0f0f2;--stage:#e9eeee;
+ --ui:'Inter',-apple-system,'Helvetica Neue',Arial,sans-serif;--display:'Inter',-apple-system,'Helvetica Neue',Arial,sans-serif;
+ --cap-head:'Unbounded','Google Sans',Arial,sans-serif;--cap-text:'Google Sans',Arial,sans-serif}
+#dm-root,#dm-root *{box-sizing:border-box}
+#dm-root{background:var(--stage);color:var(--ink);font-family:var(--cap-text)}
+.stage{position:absolute;inset:0;background:radial-gradient(1200px 800px at 30% 50%,#f6f9f9 0%,var(--stage) 70%)}
+.phone-wrap{position:absolute;left:330px;top:50%;width:390px;height:844px;transform:translateY(-50%) scale(1.13);transform-origin:center}
+.phone{position:absolute;inset:0;border-radius:52px;overflow:hidden;background:#fff;box-shadow:0 0 0 11px #111,0 30px 70px rgba(0,40,45,.28);color:var(--ink)}
+.status{position:absolute;left:0;right:0;top:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0 44px;font:600 17px var(--ui);background:#fff;z-index:50}
+.status .r{display:flex;align-items:center;gap:6px;font:600 15px var(--ui)}
+.bars{display:flex;align-items:flex-end;gap:2px;height:12px}.bars i{width:3px;background:currentColor;border-radius:1px}
+.batt{background:var(--ink);color:#fff;font:700 12px var(--ui);border-radius:4px;padding:1px 4px}
+.vp{position:absolute;left:0;right:0;top:54px;bottom:0;overflow:hidden}
+.scr{position:absolute;inset:0;background:#fff;overflow:hidden;transform:translateX(100%)}
+.homebar{position:absolute;left:50%;bottom:8px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:#111;z-index:90}
+.press{position:absolute;inset:0;background:rgba(0,0,0,.07);opacity:0;pointer-events:none}
+.pos{position:relative}
+/* шапка главного экрана и вкладки */
+.top{height:56px;display:grid;grid-template-columns:70px 1fr 90px;align-items:center;padding:0 12px;background:#fff;position:relative;z-index:2}
+.top img{width:52px}.top .t{text-align:center;font:600 20px var(--ui)}
+.top .ic{position:relative;height:26px}
+.top .ic>div{position:absolute;right:0;top:0;display:flex;gap:16px;color:var(--accent)}
+.top svg{width:26px;height:26px}
+.tabs{display:flex;border-bottom:1px solid var(--line);height:44px;background:#fff;position:relative;z-index:2}
+.tabs div{flex:1;text-align:center;font:400 15.5px/42px var(--ui);color:var(--text);position:relative}
+.uline{position:absolute;left:0;bottom:-1px;height:3px;width:97.5px;background:var(--accent)}
+.panels{position:absolute;left:0;right:0;top:100px;bottom:0;overflow:hidden}
+.panel{position:absolute;inset:0;overflow:hidden;background:#fff}
+/* лента */
+.feedp{background:var(--feed)}
+.feed{padding-top:8px;display:flex;flex-direction:column;gap:8px}
+.card{background:#fff;padding:16px 16px 14px;position:relative}
+.meta{display:flex;align-items:center;gap:12px}
+.badge{background:var(--accent);color:#fff;font:500 13px var(--ui);padding:3px 7px;border-radius:3px;white-space:nowrap}
+.term{display:flex;align-items:center;gap:5px;color:var(--accent);font:400 13.5px var(--ui)}
+.h{font:600 18px/1.3 var(--ui);margin-top:10px;color:var(--text)}
+.date{font:400 15px var(--ui);color:var(--text);margin-top:10px}
+.wide{width:calc(100% + 32px);margin:12px -16px 0;display:block}
+/* список услуг */
+.svc{border-top:8px solid var(--feed)}
+.srow{display:flex;align-items:center;gap:22px;height:56px;padding:0 20px;font:400 17px var(--ui);color:var(--ink);position:relative}
+.srow svg{width:26px;height:26px;color:var(--accent);flex:none}
+/* кнопка консультанта */
+.fab{position:absolute;right:16px;bottom:50px;height:56px;padding:0 22px 0 18px;display:flex;align-items:center;gap:9px;border-radius:28px;color:#fff;font:600 17px/1 var(--ui);z-index:40;
+ background:linear-gradient(180deg,rgba(255,255,255,.4) 0%,rgba(255,255,255,0) 60%,rgba(20,0,90,.14) 100%),linear-gradient(115deg,#2b7cff 0%,#6a4dff 50%,#b83cff 100%);
+ text-shadow:0 1px 2px rgba(30,0,90,.35);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),inset 0 -4px 8px rgba(40,10,130,.45),0 10px 22px rgba(80,50,220,.5),0 3px 6px rgba(0,0,0,.3)}
+.fab svg{width:24px;height:24px}
+/* навигационная шапка экранов */
+.nav{position:absolute;left:0;right:0;top:0;height:56px;display:flex;align-items:center;gap:20px;padding:0 16px;background:#fff;border-bottom:1px solid var(--line);z-index:3;color:var(--accent)}
+.nav svg{width:24px;height:24px;flex:none}
+.nav .tt{flex:1;min-width:0;font:600 18px var(--ui);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav .tt small{display:block;font:400 11.5px var(--ui);color:var(--grey);margin-top:1px}
+.nav .rt{position:relative;width:24px;height:24px}
+.nav .rt>span{position:absolute;inset:0}
+.ok-off{color:#c9c9ce}
+.body{position:absolute;left:0;right:0;top:56px;bottom:0;overflow:hidden}
+.art{position:relative}
+.art>img{width:100%;display:block}
+.art .in{padding:14px 16px 0}
+.art h2{font:700 21px/1.25 var(--ui);margin:10px 0 4px;color:var(--ink)}
+.art .d{font:400 14px var(--ui);color:var(--grey)}
+.art p{font:400 15.5px/1.42 var(--ui);color:var(--text);margin:14px 0 0}
+.art .sec{font:700 15.5px var(--ui);color:var(--ink);margin-top:20px}
+.art .it{margin-top:12px;font:400 15px/1.4 var(--ui);color:var(--text)}
+.art .it b{color:var(--ink)}
+.art .pr{margin-top:6px;font:400 15px var(--ui);color:var(--text)}
+.art .note{font-style:italic}
+.art .lnk{color:#1a5fd0;text-decoration:underline}
+.art .fine{font:400 9.5px/1.5 var(--ui);color:#666;margin-top:12px}
+.rows{margin-top:22px;border-top:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:16px;height:54px;padding:0 16px;border-bottom:1px solid var(--line);font:400 16.5px var(--ui);color:var(--accent);position:relative}
+.row svg{width:24px;height:24px;flex:none}
+.grp{background:var(--feed);padding:18px 16px 8px;font:500 13px var(--ui);color:var(--grey);letter-spacing:.04em}
+.mini{display:flex;gap:12px;background:#fff;padding:12px 16px;border-bottom:1px solid var(--line);position:relative}
+.mini img{width:96px;height:64px;object-fit:cover;flex:none;border-radius:2px}
+.mini .h{margin-top:6px;font-size:15px}
+.mini .dt{font:400 13px var(--ui);color:var(--grey);margin-top:6px}
+/* формы */
+.frow{display:flex;align-items:center;gap:22px;min-height:56px;padding:0 18px;border-bottom:1px solid var(--line);font:400 16.5px var(--ui);color:var(--ink);position:relative}
+.frow svg{width:24px;height:24px;color:#8e8e93;flex:none}
+.frow .car{width:44px;height:36px;object-fit:contain;flex:none;margin-left:-6px}
+.frow .two{font:400 16.5px var(--ui)}.frow .two small{display:block;font:400 14px var(--ui);color:var(--grey);margin-top:2px}
+.ph{color:#9a9aa0}.req{color:#d33}
+.val{position:absolute;left:64px;top:50%;transform:translateY(-50%);opacity:0;background:#fff;padding-right:20px}
+.fhead{padding:16px 18px 8px;font:600 16px var(--ui);color:var(--ink)}
+.radio{display:flex;align-items:center;gap:22px;height:52px;padding:0 22px;font:400 16.5px var(--ui);position:relative}
+.rb{width:22px;height:22px;border-radius:50%;border:2px solid #b8b8be;position:relative;flex:none}
+.rb i{position:absolute;inset:3px;border-radius:50%;background:var(--accent);opacity:0}
+.hint{font:400 12.5px/1.35 var(--ui);color:var(--grey);padding:6px 18px 14px}
+.field{margin:18px 18px 0;padding-bottom:8px;border-bottom:1px solid #c9c9ce;font:400 16.5px var(--ui);color:#9a9aa0}
+/* календарь */
+.cal{padding:14px 16px 12px;border-bottom:1px solid var(--line)}
+.cal .m{font:400 16px var(--ui);color:var(--ink)}
+.wk{display:grid;grid-template-columns:repeat(8,1fr);text-align:center;margin-top:16px;font:400 12px var(--ui);color:var(--grey)}
+.dd{display:grid;grid-template-columns:repeat(8,1fr);text-align:center;margin-top:12px;font:400 16px var(--ui)}
+.dd div{position:relative;height:38px;line-height:38px}
+.sel{position:absolute;left:50%;top:0;width:38px;height:38px;margin-left:-19px;border-radius:50%;background:var(--accent);opacity:0}
+.dd span{position:relative;z-index:1}
+.wt{position:absolute;left:0;right:0;top:0;text-align:center;line-height:38px;color:#fff;opacity:0;z-index:2}
+.calbody{position:absolute;left:0;right:0;top:170px;bottom:0;background:var(--feed)}
+.nofree{position:absolute;left:0;right:0;top:120px;text-align:center;font:400 14px var(--ui);color:var(--grey)}
+.nofree svg{width:34px;height:34px;color:#9a9aa0;display:block;margin:0 auto 10px}
+.slots{position:absolute;left:0;right:0;top:20px;display:grid;grid-template-columns:repeat(3,96px);gap:14px 18px;justify-content:center;opacity:0}
+.slot{height:36px;border:1.5px solid var(--accent);border-radius:3px;text-align:center;line-height:33px;font:400 15px var(--ui);color:var(--accent);background:#fff;position:relative}
+.slot .on{position:absolute;inset:-1.5px;border-radius:3px;background:var(--accent);color:#fff;opacity:0}
+/* списки выбора */
+.opt{padding:12px 18px;border-bottom:1px solid #f0f0f2;position:relative}
+.opt b{display:block;font:400 16.5px var(--ui);color:var(--ink)}
+.opt small{display:block;font:400 12.5px var(--ui);color:var(--grey);margin-top:2px}
+/* марки и автомобили */
+.brands{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)}
+.brands div{height:112px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:grid;place-items:center;position:relative;overflow:hidden}
+.brands img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.carc{border-bottom:8px solid var(--feed);position:relative}
+.carc img{width:100%;display:block}
+.carc .n{font:400 16px var(--ui);padding:6px 16px 0}.carc .s{font:400 14px var(--ui);color:var(--grey);padding:2px 16px 12px}
+.avail{background:#9a9ba0;color:#fff;font:400 12.5px var(--ui);padding:7px 16px}
+.cname{font:400 21px var(--ui);padding:14px 16px 4px}.cdash{color:var(--grey);padding:0 16px 16px;border-bottom:1px solid var(--line)}
+.more{background:var(--feed);padding:16px 16px 10px;font:500 13.5px var(--ui);color:#6b6b70;letter-spacing:.03em;border-bottom:1px solid var(--line)}
+.bbtn{position:absolute;left:0;right:0;bottom:34px;height:52px;background:var(--accent);color:#fff;font:600 15px var(--ui);letter-spacing:.03em;display:grid;place-items:center;z-index:2}
+.bbtn .press{background:rgba(255,255,255,.18)}
+/* поиск и клавиатура */
+.sbar{position:absolute;left:0;right:0;top:0;height:56px;display:flex;align-items:center;gap:20px;padding:0 16px;border-bottom:1px solid var(--line);background:#fff;z-index:3;color:var(--accent)}
+.sbar svg{width:24px;height:24px;flex:none}
+.sfield{flex:1;font:400 18px var(--ui);color:var(--ink);position:relative;height:26px}
+.sfield .phd{position:absolute;left:0;top:0;color:#9a9aa0}
+.sfield .typed{position:absolute;left:0;top:0;text-decoration:underline;text-underline-offset:3px}
+.sfield .typed span{opacity:0}
+.sclear{opacity:0}
+.kb{position:absolute;left:0;right:0;bottom:0;height:290px;background:#d3d6dc;padding:6px 3px 0;z-index:4}
+.sugg{display:flex;height:40px;align-items:center;justify-content:space-around;font:400 17px var(--ui);color:var(--ink);opacity:0}
+.krow{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.k{width:33px;height:42px;border-radius:5px;background:#fff;box-shadow:0 1px 0 #8a8d93;display:grid;place-items:center;font:400 21px var(--ui);color:var(--ink);position:relative}
+.k.w{width:46px;background:#adb2bb;font-size:14px}.k.sp{width:170px;font-size:14px;color:#555}.k.go{width:80px;background:var(--accent);color:#fff;font-size:15px}
+.k .hl{position:absolute;inset:0;border-radius:5px;background:#9aa0a8;opacity:0}
+.res{position:absolute;left:0;right:0;top:56px;bottom:0;background:#fff;opacity:0}
+.empty{position:absolute;left:0;right:0;top:170px;text-align:center;font:400 16px var(--ui);color:var(--grey)}
+.empty svg{width:40px;height:40px;display:block;margin:0 auto 12px;color:#9a9aa0}
+.hit{color:#1a5fd0}
+.emp{display:flex;align-items:center;gap:14px;padding:12px 16px;font:400 16px var(--ui)}
+.emp .av{width:40px;height:40px;border-radius:50%;background:#e4e4e8;display:grid;place-items:center;color:#a0a0a6}.emp .av svg{width:24px;height:24px}
+.grph{display:flex;justify-content:space-between}
+.grph b{color:var(--accent);font-weight:600}
+/* экран блокировки */
+.lock{position:absolute;inset:0;z-index:80;opacity:0;color:#fff;
+ background:radial-gradient(120% 80% at 20% 0%,#2c3f8f 0%,rgba(44,63,143,0) 55%),linear-gradient(170deg,#3a4fa8 0%,#c52a4e 48%,#ee3b3b 62%,#3b8fd6 100%)}
+.lock .st{position:absolute;left:0;right:0;top:0;height:54px;display:flex;justify-content:flex-end;align-items:center;gap:6px;padding:6px 30px 0;font:600 15px var(--ui)}
+.lock .st .batt{background:#fff;color:#000}
+.lock .clock{position:absolute;left:0;right:0;top:110px;text-align:center;font:200 84px/1 var(--display);letter-spacing:-.01em}
+.lock .day{position:absolute;left:0;right:0;top:204px;text-align:center;font:400 20px var(--ui)}
+.notif{position:absolute;left:10px;right:10px;top:300px;border-radius:16px;background:rgba(245,245,247,.86);color:#111;padding:12px 14px;opacity:0;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.notif .hd{display:flex;align-items:center;gap:8px;font:400 13px var(--ui);color:#555}
+.notif .hd img{width:22px;height:22px;border-radius:5px;background:#fff;object-fit:contain}
+.notif .hd span:last-child{margin-left:auto}
+.notif .tx{font:400 15px/1.35 var(--ui);margin-top:6px}
+/* набор номера */
+.dial{position:absolute;inset:0;background:#fff;z-index:44;transform:translateY(100%)}
+.dial .dn{height:52px;display:flex;align-items:center;padding:0 14px;color:var(--accent);position:relative}.dial .dn svg{width:24px;height:24px}
+.dial .dt2{position:absolute;left:0;right:0;text-align:center;font:600 18px var(--ui);color:var(--ink)}
+.dial .acts{padding:6px 24px;display:flex;flex-direction:column;gap:16px;font:400 16px var(--ui);color:#1a73e8}
+.dial .num{text-align:center;font:400 34px var(--ui);color:#2fa84f;margin-top:140px;letter-spacing:.01em}
+.dial .reg{text-align:center;font:400 13px var(--ui);color:var(--grey);margin-top:4px}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);row-gap:16px;margin:24px 34px 0;text-align:center}
+.keys div{font:300 30px var(--ui);color:var(--ink)}.keys small{display:block;font:400 10px var(--ui);color:var(--grey);letter-spacing:.1em;margin-top:-2px}
+.callbtns{display:flex;justify-content:center;margin-top:22px}
+.callbtns span{display:flex;align-items:center;gap:6px;height:46px;padding:0 20px;background:#34c759;color:#fff;font:600 14px var(--ui)}
+.callbtns span:first-child{border-radius:23px 0 0 23px;border-right:1px solid rgba(255,255,255,.5)}.callbtns span:last-child{border-radius:0 23px 23px 0}
+.callbtns svg{width:16px;height:16px}
+/* диалоги */
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.42);opacity:0;z-index:45}
+.dlg{position:absolute;left:28px;right:28px;background:#fff;border-radius:16px;overflow:hidden;opacity:0;z-index:46;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.dlg .dt{font:600 19px var(--ui);padding:20px 20px 10px;color:var(--ink);border-bottom:1px solid #eee}
+.dlg .op{position:relative;font:400 17px var(--ui);padding:14px 20px;color:var(--ink)}
+.dlg .cn{text-align:right;font:600 15px var(--ui);color:var(--accent);padding:12px 20px 18px}
+/* нажатие */
+.tap{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(14,124,134,.28);border:3px solid rgba(255,255,255,.95);box-shadow:0 0 0 2px rgba(14,124,134,.55),0 4px 14px rgba(0,0,0,.25);opacity:0;z-index:95;pointer-events:none}
+/* подписи */
+.caps{position:absolute;left:1000px;top:0;bottom:0;width:780px}
+.scene{position:absolute;left:0;top:300px;font:600 20px var(--cap-head);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);opacity:0}
+.cap{position:absolute;left:0;top:350px;width:780px;font:600 40px/1.25 var(--cap-head);color:#14282b;opacity:0;text-wrap:balance}
+.cap small{display:block;margin-top:22px;font:400 28px/1.4 var(--cap-text);color:#4b6164}
+.prog{position:absolute;left:0;bottom:120px;height:4px;width:520px;background:rgba(14,124,134,.15);border-radius:2px;overflow:hidden;opacity:0}
+.prog i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left;transform:scaleX(0)}
+
+.page{max-width:1600px;margin:0 auto;padding-inline:16px;padding-block:24px 40px;display:flex;flex-direction:column;gap:16px}
+.page h1{font:600 clamp(22px,2.6vw,34px)/1.15 var(--cap-head);margin:0;color:#14282b}
+.page .lead{margin:6px 0 0;font:400 15px var(--cap-text);color:#4b6164}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+.nw{display:none}
+@media (max-width:980px){.grid{grid-template-columns:1fr}.w{display:none}.nw{display:inline}}
+.view{position:relative;width:100%;max-width:100%;aspect-ratio:16/9}
+.view .stage{position:absolute;left:0;top:0;right:auto;bottom:auto;width:1920px;height:1080px;transform-origin:0 0;background:transparent}
+#caps .sect{font-size:40px!important;color:var(--accent)!important;white-space:nowrap}
+#caps .cap{font-size:56px!important;line-height:1.15!important}
+#caps .cap small{font-size:28px!important;margin-top:20px!important}
+.playb{position:absolute;left:0;top:880px;display:flex;align-items:center;gap:22px;border:0;background:none;padding:0;cursor:pointer;font:600 28px var(--cap-head);color:#14282b}
+.playb i{width:104px;height:104px;border-radius:50%;background:var(--accent);display:grid;place-items:center;box-shadow:0 10px 26px rgba(14,124,134,.35)}
+.playb svg{width:46px;height:46px;color:#fff}
+.playb:focus-visible i{outline:4px solid #14282b;outline-offset:4px}
+.list{background:#fff;border:1px solid #d9e3e4;border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:2px;margin:0;list-style:none}
+.list button{width:100%;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;padding:11px 12px;border:0;border-radius:8px;background:transparent;color:#14282b;font:500 15.5px var(--cap-text);text-align:left;cursor:pointer}
+.list button:hover{background:#e1f0f1}
+.list button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.list .n{font:600 14px var(--cap-head);color:var(--accent)}
+.list .t{font-variant-numeric:tabular-nums;color:#5d7275;font-size:14px}
+.list button.on{background:var(--accent);color:#fff}.list button.on .n,.list button.on .t{color:#fff}
+</style>
+
+</head>
+<body style="margin:0">
+<div id="dm-root">
+<div class="page">
+ <header>
+  <h1>Система Dealer Mobility</h1>
+  <p class="lead">Демонстрация работы клиента в приложении. Нажмите на раздел (<span class="w">справа</span><span class="nw">ниже</span>), чтобы перейти к нему.</p>
+ </header>
+ <div class="grid">
+  <div class="view" id="view">
+<div class="stage">
+ <div class="phone-wrap"><div class="phone" id="phone">
+  <div class="status"><span>01:56</span><span class="r"><span class="bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:12px;opacity:.3"></i></span>LTE<span class="batt">85</span></span></div>
+  <div class="vp" id="vp"></div>
+  <div class="fab" id="fab"><span data-i="spark"></span>Консультант</div>
+  <div class="lock" id="lock"></div>
+  <div class="tap" id="tap"></div>
+  <div class="homebar"></div>
+ </div></div>
+ <div class="caps" id="caps"></div>
+</div>
+</div>
+<script>
+/* Демонстрационный ролик приложения «МегаДилер».
+   Каждый кадр — состояние страницы в момент t (мс): все движения заданы анимациями
+   с явным началом, render(t) ставит их на нужное время. */
+
+const I={
+ filter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
+ search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+ doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',
+ timer:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>',
+ back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5M11 5l-7 7 7 7"/></svg>',
+ close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>',
+ share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>',
+ phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>',
+ headset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>',
+ cash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="9" width="18" height="11" rx="1.5"/><path d="M6 9V5h12v4"/><circle cx="12" cy="14.5" r="2"/></svg>',
+ chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01" stroke-width="3"/></svg>',
+ tag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/></svg>',
+ clip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11l-8.5 8.5a5 5 0 0 1-7-7L13 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L14 7"/></svg>',
+ spark:'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9zM18 13l.95 2.55L21.5 16.5l-2.55.95L18 20l-.95-2.55L14.5 16.5l2.55-.95z"/></svg>',
+ /* иконки услуг */
+ sRepair:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 4h6a1 1 0 0 1 1 1v2h4a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h4V5a1 1 0 0 1 1-1zm1 3h4V6h-4zM3 12h18v1.5H3z"/></svg>',
+ sTO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M14.5 6.5a4 4 0 0 0-5 5L4 17l3 3 5.5-5.5a4 4 0 0 0 5-5L15 12l-3-3z"/><path d="M5 5l6 6M3.5 6.5l3-3"/></svg>',
+ sDrive:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.2"/><path d="M3.5 10.5c3-1.3 14-1.3 17 0M12 14.2V21"/></svg>',
+ sShield:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z"/><path d="M12 5.2v14.2c-3-1.5-5-4.6-5-8.4V7.2z" fill="#fff" opacity=".45"/></svg>',
+ sParts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><circle cx="10.5" cy="10.5" r="2.4" fill="currentColor"/></svg>',
+ sCredit:'<svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="9" cy="6" rx="6" ry="2.4"/><path d="M3 9c0 1.3 2.7 2.4 6 2.4s6-1.1 6-2.4v2.5c0 1.3-2.7 2.4-6 2.4S3 12.8 3 11.5zM3 14c0 1.3 2.7 2.4 6 2.4s6-1.1 6-2.4v2.5c0 1.3-2.7 2.4-6 2.4S3 17.8 3 16.5z"/><rect x="15" y="12" width="6.5" height="8" rx="1"/></svg>',
+ sHelmet:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 15a9 9 0 0 1 18 0v2H11l-2 3H4a1 1 0 0 1-1-1z"/><path d="M13 9h6.5" stroke="#fff" stroke-width="2"/></svg>',
+ person:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5z"/></svg>',
+ empty:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>'
+};
+const fill=root=>root.querySelectorAll('[data-i]').forEach(e=>{if(!e.dataset.done){e.insertAdjacentHTML('afterbegin',I[e.dataset.i]);e.dataset.done=1;}});
+
+const $=id=>document.getElementById(id);
+const VP=$('vp');
+function screen(id,html,root=54){const d=document.createElement('div');d.className='scr';d.id=id;d.dataset.root=root;d.innerHTML=html;VP.appendChild(d);fill(d);return d;}
+function vpEl(cls,id,html,style=''){const d=document.createElement('div');d.className=cls;d.id=id;d.dataset.root=54;d.innerHTML=html;if(style)d.setAttribute('style',style);VP.appendChild(d);fill(d);return d;}
+const badge=(b='Спецпредложение')=>`<div class="meta"><span class="badge">${b}</span><span class="term" data-i="timer">Бессрочное</span></div>`;
+const nav=(title,left='back',right='',sub='')=>`<div class="nav"><span class="lft" data-i="${left}"></span><div class="tt">${title}${sub?`<small>${sub}</small>`:''}</div>${right}</div>`;
+const okBtn=id=>`<div class="rt" id="${id}"><span class="ok-off" data-i="check"></span><span class="ok-on" data-i="check" style="opacity:0"></span></div>`;
+const shareBtn='<span data-i="share"></span>';
+
+/* ---------------- экраны ---------------- */
+screen('home',`
+ <div class="top"><img src="https://1416363.github.io/DM-demo/img/logo-car.png"><div class="t">МегаДилер</div>
+  <div class="ic"><div id="icFeed"><span data-i="filter"></span><span id="icSearch" data-i="search"></span></div><div id="icSvc" style="opacity:0"><span data-i="doc"></span></div></div></div>
+ <div class="tabs" id="tabs"><div>Актуальное</div><div id="tabSvc">Услуги</div><div>Дилеры</div><div>Автомобили</div><i class="uline" id="uline"></i></div>
+ <div class="panels">
+  <div class="panel feedp" id="pFeed" style="transform:none"><div class="feed" id="feed">
+   <div class="card" id="c-cx5">${badge()}<div class="h">MAZDA CX-5. BLACK SALE</div><img class="wide" src="https://1416363.github.io/DM-demo/img/news-cx5.jpg"><div class="date">20 янв. 2026 г.</div></div>
+   <div class="card" id="c-may">${badge()}<div class="h">АКЦИЯ МАЯ</div><img class="wide" src="https://1416363.github.io/DM-demo/img/news-may.jpg"></div>
+   <div class="card" id="c-mazda"><div class="press" id="p-mazda"></div>${badge()}<div class="h">ВЫГОДНЫЙ СЕРВИС MAZDA!</div><img class="wide" src="https://1416363.github.io/DM-demo/img/news-mazda-service.jpg"><div class="date">13 янв. 2026 г.</div></div>
+   <div class="card" id="c-hy">${badge()}<div class="h">Скидки на сервис для Hyundai от 3 лет и старше</div><img class="wide" src="https://1416363.github.io/DM-demo/img/news-hyundai-service.jpg"><div class="date">29 дек. 2025 г.</div></div>
+   <div class="card" id="c-ev">${badge()}<div class="h">Вечерний сервис Hyundai - Выгодно на 20%</div><img class="wide" src="https://1416363.github.io/DM-demo/img/news-hyundai-evening.jpg"><div class="date">14 дек. 2025 г.</div></div>
+  </div></div>
+  <div class="panel" id="pSvc" style="transform:translateX(100%)"><div class="svc">
+   <div class="srow" id="sRepair"><span data-i="sRepair"></span>Ремонт</div>
+   <div class="srow" id="sTO"><div class="press" id="p-sTO"></div><span data-i="sTO"></span>ТО</div>
+   <div class="srow" id="sDrive"><div class="press" id="p-sDrive"></div><span data-i="sDrive"></span>Тест-драйв</div>
+   <div class="srow" id="sIns"><div class="press" id="p-sIns"></div><span data-i="sShield"></span>Страховка</div>
+   <div class="srow"><span data-i="sParts"></span>Запчасти и аксессуары</div>
+   <div class="srow" id="sCredit"><div class="press" id="p-sCredit"></div><span data-i="sCredit"></span>Кредит</div>
+   <div class="srow"><span data-i="sHelmet"></span>Коллекционные аксессуары</div>
+  </div></div>
+ </div>`);
+$('home').style.transform='none';
+
+/* новость «Выгодный сервис Mazda» */
+screen('news',`${nav('','back',shareBtn)}
+ <div class="body"><div class="art" id="art">
+  <img src="https://1416363.github.io/DM-demo/img/news-mazda-service.jpg"><div class="in">${badge()}
+  <h2>ВЫГОДНЫЙ СЕРВИС MAZDA!</h2><div class="d">13 янв. 2026 г.</div>
+  <p>Температура за окном все понижается, а мы повышаем скидки на обслуживание вашего автомобиля в холодный сезон! Готовы порадовать клиентов MAZDA «МегаДилер» приятными акциями по сервисным работам. Ждем вас!</p>
+  <div class="sec">ДЕЙСТВУЮЩИЕ АКЦИИ:</div>
+  <div class="it"><b>1. Замена моторного масла и фильтра.</b> В комплексе предлагается диагностика ходовой и тормозной системы за 1 рубль.</div><div class="pr">Стоимость – 12 000 руб.</div>
+  <div class="it"><b>2. Подготовь свой автомобиль к дальней поездке - комплексная диагностика.</b></div><div class="pr">Стоимость – 3 500 руб.</div>
+  <div class="it"><b>3. Сход-развал, проверка и регулировка.</b></div><div class="pr">Стоимость – 3 650 руб.</div>
+  <div class="it"><b>4. Диагностика и перезаправка кондиционера.</b></div><div class="pr">Стоимость – 4 000 руб.</div>
+  <div class="it"><b>5. Антисептическая обработка вентиляции салона.</b></div><div class="pr">Стоимость – 2 300 руб.</div>
+  <div class="it"><b>6. Замена масла в АКПП (фильтр и трансмиссионное масло оригинал).</b> Работы по настройке и адаптации АКПП после замены в подарок.</div><div class="pr">Стоимость – 35 000 руб.</div>
+  <div class="it"><b>7. Обслуживание тормозных механизмов.</b></div><div class="pr">Фиксированная стоимость – 2800 руб.</div>
+  <p class="note">Для тех, кто впервые планирует посетить наш технический центр мы дарим скидку 20%.</p>
+  <p class="note">Акции действуют в период с 01 января по 28 февраля 2026 г. и не суммируются между собой.</p>
+  <div class="sec">ОФИЦИАЛЬНЫЙ ДИЛЕР MAZDA «МегаДилер» СЕРВИС:</div>
+  <div class="it"><b>г. Москва, ул. Введенского, д. 4А<br>+7 (495) 737 47 20</b><br><span class="lnk">https://mazda-sim.ru/</span></div></div>
+  <div class="rows" id="rows">
+   <div class="row" id="rCall"><div class="press" id="p-rcall"></div><span data-i="phone"></span>Позвонить дилеру</div>
+   <div class="row" id="rBack"><div class="press" id="p-rback"></div><span data-i="headset"></span>Заказать обратный звонок</div></div>
+  <div class="grp">ДРУГИЕ НОВОСТИ</div>
+  <div class="mini"><img src="https://1416363.github.io/DM-demo/img/news-cx5.jpg"><div><div class="meta"><span class="badge">Спецпредложение</span></div><div class="h">MAZDA CX-5. BLACK SALE</div></div></div>
+  <div class="mini"><img src="https://1416363.github.io/DM-demo/img/news-hyundai-service.jpg"><div><div class="meta"><span class="badge">Спецпредложение</span></div><div class="h">Скидки на сервис для Hyundai от 3 лет и старше</div></div></div>
+ </div></div>`);
+
+/* поиск */
+const kbRows=[['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['⇧','z','x','c','v','b','n','m','⌫']];
+const kbHtml=`<div class="kb"><div class="sugg" id="sugg"><span>kgm</span><span>KGM</span><span>Kim</span></div>
+ ${kbRows.map(r=>`<div class="krow">${r.map(k=>`<div class="k${k==='⇧'||k==='⌫'?' w':''}" ${/[a-z]/.test(k)?`id="key-${k}"`:''}><i class="hl"></i><span style="position:relative">${k}</span></div>`).join('')}</div>`).join('')}
+ <div class="krow"><div class="k w">?123</div><div class="k w">🌐</div><div class="k sp">English</div><div class="k go">Найти</div></div></div>`;
+screen('search',`<div class="sbar"><span data-i="back"></span><div class="sfield"><span class="phd" id="phd">Поиск</span><span class="typed"><span id="ch0">k</span><span id="ch1">g</span><span id="ch2">m</span></span></div><span class="sclear" id="sclear" data-i="close"></span></div>
+ <div class="empty" id="sEmpty"><span data-i="empty"></span>Нет результатов</div>
+ <div class="res" id="sRes">
+  <div class="grp">НОВОСТИ</div>
+  <div class="mini"><img src="https://1416363.github.io/DM-demo/img/srch-credit.jpg"><div>${badge()}<div class="h">Кредит от 0,01%* для комфортной покупки ново…</div><div class="dt">27 окт. 2025 г.</div></div></div>
+  <div class="mini" id="srTrade"><div class="press" id="p-srTrade"></div><img src="https://1416363.github.io/DM-demo/img/srch-tradein.jpg"><div>${badge()}<div class="h">Покупка нового <span class="hit">KGM</span> в трейд-ин</div><div class="dt">27 окт. 2025 г.</div></div></div>
+  <div class="grp">СОТРУДНИКИ</div>
+  <div class="emp"><span class="av" data-i="person"></span>Гостев Олег</div>
+ </div>
+ <div id="kbWrap">${kbHtml}</div>`);
+screen('trade',`${nav('','back',shareBtn)}
+ <div class="body"><div class="art">
+  <img src="https://1416363.github.io/DM-demo/img/news-kgm-tradein.jpg"><div class="in">${badge()}
+  <h2>Покупка нового KGM в трейд-ин</h2><div class="d">27 окт. 2025 г.</div>
+  <p>У нас есть решение для тех, кто давно хотел обновить свой автомобиль и искал надежный вариант.</p>
+  <p>Уточняйте условия выгодного трейд-ина в дилерских центрах KGM.</p>
+  <p>KGM с выгодой по трейд-ин до 300 000* руб.</p>
+  <p>Подробности по телефону: +7 495 737 47 19</p>
+  <p>Дисклеймер *</p></div>
+  <div class="rows"><div class="row"><span data-i="phone"></span>Позвонить дилеру</div><div class="row"><span data-i="headset"></span>Заказать обратный звонок</div></div>
+ </div></div>`);
+
+/* push: предложение */
+screen('offer',`${nav('','back')}
+ <div class="body"><div class="art" id="offArt">
+  <img src="https://1416363.github.io/DM-demo/img/push-discovery.jpg"><div class="in"><div class="meta"><span class="badge">Персональное предложение</span></div>
+  <h2>Ваш Weekend в МегаДилер! Лучшие предложения сезона на автомобили Discovery Sport из наличия!</h2><div class="d">26 авг. 2021 г.</div>
+  <p>Друзья!</p>
+  <p>Летний сезон постепенно подходит к своему завершению, но летнее настроение и теплая погода не покидают нас.</p>
+  <p>МегаДилер Jaguar Land Rover подготовил для Вас специальные предложения на автомобили Discovery Sport в наличии.</p>
+  <p>Только до 27 августа при покупке Discovery Sport в МегаДилер:</p>
+  <p>• VIP обслуживание в нашем сервисном центре</p>
+  <p>Станьте обладателем желанного автомобиля в «МегаДилер», и мечта станет реальностью!</p>
+  <p>ВНИМАНИЕ! Количество автомобилей ограничено!</p>
+  <p>Успейте, пока автомобили ещё есть в наличии!</p>
+  <div class="fine">*Financial Services (Финансовые услуги). Кредит предоставляется ПАО РОСБАНК, ген.лиц. ЦБ РФ № 2272, ВТБ (ПАО), ген.лиц. ЦБ РФ № 1000 (далее – «Банки»). Условия: процентная ставка – 10,3% годовых, первоначальный взнос – от 20% от стоимости автомобиля, срок кредита – 12-60 мес., валюта кредита – рубль РФ, сумма кредита от 100 000 руб. до 8 000 000 руб. в зависимости от программы Банка. В случае несвоевременного исполнения обязательств по возврату кредита и/или уплате процентов, комиссий заемщик уплачивает неустойку в виде пени в размере 0,1% в день от суммы невыполненных обязательств. Обеспечение по кредиту – залог приобретаемого автомобиля. Страхование залога является обязательным и осуществляется в соответствии с тарифами страховой компании. Банк принимает решение о выдаче кредита на основании всей предоставленной информации в соответствии с установленными требованиями Банка к заёмщикам. Условия действительны до 31.08.2021г. Программа распространяется на новые автомобили указанной в предложении модели. Вся информация носит справочный характер и не является публичной офертой (ст. 437 ГК РФ).</div></div>
+  <div class="rows" id="offRows"><div class="row"><span data-i="phone"></span>Позвонить дилеру</div><div class="row"><span data-i="headset"></span>Заказать обратный звонок</div></div>
+  <div class="grp">ОТПРАВИТЬ ЗАЯВКУ</div>
+  <div class="row" style="color:var(--ink)"><span data-i="cash" style="color:var(--ink)"></span><span style="flex:1">Кредит</span><span data-i="chev" style="color:#8e8e93"></span></div>
+  <div style="height:200px;background:var(--feed)"></div>
+ </div></div>`);
+$('lock').innerHTML=`<div class="st"><span class="bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:12px;opacity:.4"></i></span>LTE<span class="batt">85</span></div>
+ <div class="clock">11:18</div><div class="day">Четверг, 26 августа</div>
+ <div class="notif" id="notif"><div class="hd"><img src="https://1416363.github.io/DM-demo/img/logo-car.png"><span>МЕГАДИЛЕР</span><span>5 мин назад</span></div>
+  <div class="tx">Ваш Weekend в МегаДилер! Лучшие предложения сезона на автомобили Discovery Sport из наличия!</div></div>`;
+$('lock').dataset.root=0;
+
+/* запись на ТО */
+screen('toForm',`${nav('Детали обслуживания','back',okBtn('toOk'))}
+ <div class="body">
+  <div class="frow"><img class="car" src="https://1416363.github.io/DM-demo/img/car-torres-icon.jpg"><div class="two">Torres<small>2024</small></div></div>
+  <div class="frow" id="toDate"><div class="press" id="p-toDate"></div><span data-i="cal"></span><span class="ph">Дата и время <span class="req">*</span></span><span class="val" id="toDateV">27 февр. 2026 г, 16:30</span></div>
+  <div class="frow" id="toType"><div class="press" id="p-toType"></div><span data-i="tag"></span><span class="ph">Тип ТО <span class="req">*</span></span><span class="val" id="toTypeV">ТО 3</span></div>
+ </div>`);
+const days=[21,22,23,24,25,26,27,28];
+const slotsT=['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
+screen('calScr',`<div class="nav"><span data-i="close"></span><div class="tt">Дата и время</div></div>
+ <div class="body" style="top:56px">
+  <div class="cal"><div class="m">Февраль</div>
+   <div class="wk"><span>СБ</span><span>ВС</span><span>ПН</span><span>ВТ</span><span>СР</span><span>ЧТ</span><span>ПТ</span><span>СБ</span></div>
+   <div class="dd">${days.map(d=>`<div id="day${d}"><i class="sel" id="sel${d}"></i><span>${d}</span><b class="wt" id="wt${d}">${d}</b></div>`).join('')}</div></div>
+  <div class="calbody" style="top:114px"><div class="nofree" id="nofree"><span data-i="empty"></span>Нет свободного времени в этот день</div>
+   <div class="slots" id="slots">${slotsT.map(s=>`<div class="slot" id="slot${s.replace(':','')}">${s}<span class="on" id="on${s.replace(':','')}" style="line-height:33px">${s}</span></div>`).join('')}</div></div>
+ </div>`);
+const toTypes=[['ТО 1','15 000 км или 12 месяца(-ев)'],['ТО 0','3 000 км или 1 месяца(-ев)'],['ТО 2','30 000 км или 24 месяца(-ев)'],['ТО 3','45 000 км или 36 месяца(-ев)'],['ТО 4','60 000 км или 48 месяца(-ев)'],['ТО 5','75 000 км или 60 месяца(-ев)'],['ТО 6','90 000 км или 72 месяца(-ев)'],['ТО 7','105 000 км или 84 месяца(-ев)'],['ТО 8','120 000 км или 96 месяца(-ев)'],['ТО 9','135 000 км или 108 месяца(-ев)']];
+screen('toList',`${nav('Тип ТО')}<div class="body">${toTypes.map((o,i)=>`<div class="opt" id="tt${i}"><div class="press" id="p-tt${i}"></div><b>${o[0]}</b><small>${o[1]}</small></div>`).join('')}</div>`);
+
+/* выбор марки, модели, автомобиля */
+const brandsHtml=`<div class="nav"><span data-i="close"></span><div class="tt">Выберите марку</div></div>
+ <div class="body"><div class="brands"><div id="bBaic"><div class="press" id="p-bBaic"></div><img src="https://1416363.github.io/DM-demo/img/brand-baic.jpg"></div><div><img src="https://1416363.github.io/DM-demo/img/brand-chery.jpg"></div><div><img src="https://1416363.github.io/DM-demo/img/brand-kgm.jpg"></div><div id="bMazda"><div class="press" id="p-bMazda"></div><img src="https://1416363.github.io/DM-demo/img/brand-mazda.jpg"></div></div></div>`;
+screen('brands',brandsHtml.replace(/id="(b|p-b)(\w+)"/g,'id="$1$2A"'));
+screen('brands2',brandsHtml.replace(/id="(b|p-b)(\w+)"/g,'id="$1$2B"'));
+screen('mzModels',`${nav('Доступные автомобили','back','','Mazda')}<div class="body">
+ <div class="carc"><img src="https://1416363.github.io/DM-demo/img/mazda-cx30.jpg"><div class="n">CX 30</div><div class="s">-</div></div>
+ <div class="carc" id="mCx5"><div class="press" id="p-mCx5"></div><img src="https://1416363.github.io/DM-demo/img/mazda-cx5.jpg"><div class="n">CX-5</div><div class="s">-</div></div></div>`);
+screen('mzCar',`${nav('Mazda','back',shareBtn)}<div class="body"><img src="https://1416363.github.io/DM-demo/img/mazda-cx5-detail.jpg" style="width:100%;display:block"><div class="avail">Доступно у 1 дилера</div><div class="cname">CX-5</div><div class="cdash">-</div><div class="more">ПОДРОБНЕЕ</div></div>
+ <div class="bbtn">ЗАПИСАТЬСЯ НА ТЕСТ-ДРАЙВ</div>`);
+screen('bcModels',`${nav('Доступные автомобили','back','','BAIC')}<div class="body">
+ <div class="carc"><img src="https://1416363.github.io/DM-demo/img/baic-bj40.jpg"><div class="n">BJ40</div><div class="s">-</div></div>
+ <div class="carc" id="mU5"><div class="press" id="p-mU5"></div><img src="https://1416363.github.io/DM-demo/img/baic-u5.jpg"><div class="n">U5 PLUS</div><div class="s">-</div></div></div>`);
+screen('bcCar',`${nav('BAIC','back',shareBtn)}<div class="body"><img src="https://1416363.github.io/DM-demo/img/baic-u5-detail.jpg" style="width:100%;display:block"><div class="avail">Доступно у 1 дилера</div><div class="cname">U5 PLUS</div><div class="cdash">-</div><div class="more">ПОДРОБНЕЕ</div></div>
+ <div class="bbtn" id="bcSend"><div class="press" id="p-bcSend"></div>ОТПРАВИТЬ ЗАЯВКУ</div>`);
+
+/* страховка */
+screen('insForm',`${nav('Сведения о страховке','back',okBtn('insOk'))}
+ <div class="body">
+  <div class="frow"><img class="car" src="https://1416363.github.io/DM-demo/img/car-torres-icon.jpg"><div class="two">KGM Torres<small>2024</small></div></div>
+  <div class="frow" id="insTerm"><div class="press" id="p-insTerm"></div><span data-i="cal"></span><span class="ph">Срок страхования <span class="req">*</span></span><span class="val" id="insTermV">10 месяцев</span></div>
+  <div class="fhead">Тип страховки</div>
+  <div id="insRadios" style="opacity:0"><div class="radio" id="rKasko"><span class="rb"><i id="rKaskoOn"></i></span>КАСКО</div><div class="radio"><span class="rb"></span>ОСАГО</div></div>
+  <div class="frow" id="insAttach" style="border-top:1px solid var(--line);transform:translateY(-104px)"><span data-i="clip"></span><span class="ph">Прикрепить файлы (осталось 10)</span></div>
+ </div>`);
+/* кредит */
+screen('crForm',`${nav('Сведения о кредите','back',okBtn('crOk'))}
+ <div class="body">
+  <div class="field">Первоначальный взнос (₽)</div>
+  <div class="hint">Первоначальный взнос - это сумма ваших собственных денег, предоставленных для получения кредита.</div>
+  <div class="frow" id="crTerm" style="border-top:1px solid var(--line)"><div class="press" id="p-crTerm"></div><span data-i="cal"></span><span class="ph">Срок кредита <span class="req">*</span></span><span class="val" id="crTermV">3 года</span></div>
+ </div>`);
+
+/* набор номера (сцена ленты) */
+vpEl('dial','dial',`<div class="dn"><span data-i="back"></span><span class="dt2">Вызовы</span></div>
+ <div class="acts"><span>Новый контакт</span><span>Добавить в контакты</span><span>Отправить сообщение</span></div>
+ <div class="num">+7 495 737-47-20</div><div class="reg">Московская обл.</div>
+ <div class="keys"><div>1<small>&nbsp;</small></div><div>2<small>АБВГ</small></div><div>3<small>ДЕЁЖЗ</small></div><div>4<small>ИЙКЛ</small></div><div>5<small>МНОП</small></div><div>6<small>РСТУ</small></div><div>7<small>ФХЦЧ</small></div><div>8<small>ШЩЪЫ</small></div><div>9<small>ЬЭЮЯ</small></div><div>*<small>&nbsp;</small></div><div>0<small>+</small></div><div>#<small>&nbsp;</small></div></div>
+ <div class="callbtns"><span><i data-i="phone"></i>Tinkoff</span><span><i data-i="phone"></i>MegaFon</span></div>`);
+
+/* затемнение и диалоги */
+vpEl('dim','dim','');
+vpEl('dlg','dlgCb',`<div class="dt">Обратный звонок</div><div class="op">Отдел продаж</div><div class="op" id="oMaster"><div class="press" id="p-master"></div>Мастера</div><div class="op">Просто перезвоните</div><div class="cn">CANCEL</div>`,'top:250px');
+const months=['12 месяцев','11 месяцев','10 месяцев','9 месяцев','8 месяцев','7 месяцев','6 месяцев','5 месяцев','4 месяца'];
+vpEl('dlg','dlgIns',`<div class="dt">Срок страхования</div>${months.map((m,i)=>`<div class="op" id="mo${i}"><div class="press" id="p-mo${i}"></div>${m}</div>`).join('')}<div class="cn">CANCEL</div>`,'top:70px');
+vpEl('dlg','dlgCr',`<div class="dt">Срок кредита</div><div class="op">5 лет</div><div class="op" id="cr3"><div class="press" id="p-cr3"></div>3 года</div><div class="op">1 год</div><div class="cn">CANCEL</div>`,'top:230px');
+fill(document);
+
+/* ---------------- движок ---------------- */
+const E='cubic-bezier(.4,0,.2,1)';
+function anim(el,t0,dur,kf,ease=E){if(typeof el==='string')el=$(el);el.animate(kf,{delay:Math.max(0,t0),duration:Math.max(1,dur),fill:'forwards',easing:ease});}
+const setAt=(el,t,props)=>anim(el,t,1,[props,props],'linear');
+/* центр элемента в координатах телефона; scroll — сдвиг прокрутки его контейнера */
+function P(el,scroll=0){if(typeof el==='string')el=$(el);let x=el.offsetWidth/2,y=el.offsetHeight/2,e=el;
+ while(e&&e.dataset.root===undefined){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent;}
+ return [x,y+(+e.dataset.root)-scroll];}
+function tap(t0,xy){const [x,y]=xy,e=$('tap');
+ setAt(e,t0,{left:x+'px',top:y+'px'});
+ anim(e,t0,520,[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)',offset:.35},{opacity:0,transform:'scale(1.5)'}],'ease-out');}
+function press(el,t0){anim(el,t0,420,[{opacity:0},{opacity:1,offset:.3},{opacity:0}]);}
+function tapEl(t0,id,scroll=0,dx=0){const p=P(id,scroll);tap(t0,[p[0]+dx,p[1]]);const pr=$('p-'+id);if(pr)press(pr,t0);}
+const TX=v=>({transform:`translate(${v},0)`}), TY=v=>({transform:`translate(0,${v})`});
+function push(a,b,t){anim(b,t,380,[TX('100%'),TX('0')]);anim(a,t,380,[TX('0'),TX('-30%')]);}
+function pop(a,b,t){anim(a,t,380,[TX('0'),TX('100%')]);anim(b,t,380,[TX('-30%'),TX('0')]);}
+function up(b,t){anim(b,t,380,[TY('100%'),TY('0')]);}
+function down(b,t){anim(b,t,380,[TY('0'),TY('100%')]);}
+function scrollY(el,t0,dur,from,to){anim(el,t0,dur,[{transform:`translateY(${-from}px)`},{transform:`translateY(${-to}px)`}],'cubic-bezier(.45,.05,.25,1)');}
+function fadeIn(el,t,d=250){anim(el,t,d,[{opacity:0},{opacity:1}]);}
+function fadeOut(el,t,d=250){anim(el,t,d,[{opacity:1},{opacity:0}]);}
+function dlgOpen(id,t){fadeIn('dim',t);anim(id,t,280,[{opacity:0,transform:'scale(.92)'},{opacity:1,transform:'scale(1)'}]);}
+function dlgClose(id,t){fadeOut('dim',t);anim(id,t,220,[{opacity:1},{opacity:0}]);}
+function okOn(id,t){fadeOut($(id).querySelector('.ok-off'),t,150);fadeIn($(id).querySelector('.ok-on'),t,150);}
+function valIn(id,t){fadeIn(id,t,200);}
+let fabY=0;function fabTo(t,y){anim('fab',t,380,[{transform:`translateY(${fabY}px)`},{transform:`translateY(${y}px)`}]);fabY=y;}
+/* вкладки главного экрана */
+const PANELS=['pFeed','pSvc'];let tabCur=0;
+function tabTo(i,t){const a=PANELS[tabCur],b=PANELS[i],dir=i>tabCur?1:-1;
+ anim(b,t,380,[TX(dir*100+'%'),TX('0')]);anim(a,t,380,[TX('0'),TX(-dir*100+'%')]);
+ anim('uline',t,380,[{transform:`translateX(${tabCur*97.5}px)`},{transform:`translateX(${i*97.5}px)`}]);
+ if(tabCur===0&&i!==0){fadeOut('icFeed',t);fadeIn('icSvc',t);} if(tabCur!==0&&i===0){fadeOut('icSvc',t);fadeIn('icFeed',t);}
+ tabCur=i;}
+/* подписи */
+function sceneBlock(t0,t1,name){const s=document.createElement('div');s.className='scene';s.textContent=name;$('caps').appendChild(s);
+ fadeIn(s,t0,400);fadeOut(s,t1-300,300);
+ const p=document.createElement('div');p.className='prog';p.innerHTML='<i></i>';$('caps').appendChild(p);
+ fadeIn(p,t0,400);fadeOut(p,t1-300,300);anim(p.firstChild,t0,t1-t0,[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],'linear');}
+function cap(t0,t1,html){const c=document.createElement('div');c.className='cap';c.innerHTML=html;$('caps').appendChild(c);
+ anim(c,t0,450,[{opacity:0,transform:'translateY(24px)'},{opacity:1,transform:'none'}]);
+ anim(c,t1-350,350,[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-16px)'}]);}
+function offsetIn(el,root){let y=0;while(el&&el!==root){y+=el.offsetTop;el=el.offsetParent;}return y;}
+
+/* ---------------- сцены ---------------- */
+const GAP=700;
+/* 3. Лента «Актуальное» */
+function sceneFeed(T0){
+ const T=T0+26000;sceneBlock(T0,T,'Лента «Актуальное»');
+ const feed=$('feed'),yM=$('c-mazda').offsetTop-8;
+ cap(T0+300,T0+4300,'Новости и спецпредложения дилера — в одной ленте<small>Клиент открывает приложение и сразу видит актуальные акции</small>');
+ scrollY(feed,T0+1800,2600,0,yM+420);
+ cap(T0+4300,T0+7400,'Лента прокручивается, как в любом привычном приложении<small>Акции, новинки, сервисные предложения</small>');
+ scrollY(feed,T0+4800,1400,yM+420,yM);
+ cap(T0+7400,T0+11200,'Нажатие открывает новость целиком<small>Фото, условия и цены акции</small>');
+ tap(T0+7000,[195,54+100+8+120]);press($('p-mazda'),T0+7000);push($('home'),$('news'),T0+7250);
+ const art=$('art'),bodyH=844-54-56,yEnd=offsetIn($('rows'),art)-Math.round(bodyH*.5);
+ scrollY(art,T0+8600,4800,0,yEnd);
+ cap(T0+11200,T0+14400,'Связаться с дилером можно прямо из новости<small>Позвонить или заказать обратный звонок</small>');
+ tapEl(T0+13900,'rCall',yEnd);up($('dial'),T0+14150);
+ cap(T0+14400,T0+18000,'«Позвонить дилеру» сразу открывает набор номера<small>Номер дилера уже введён — остаётся нажать вызов</small>');
+ tap(T0+17300,[28,54+26]);down($('dial'),T0+17500);
+ tapEl(T0+18300,'rBack',yEnd);dlgOpen('dlgCb',T0+18600);
+ cap(T0+18000,T0+22400,'Или заказать обратный звонок<small>Клиент выбирает, кто ему перезвонит: отдел продаж, мастер или просто «перезвоните»</small>');
+ tapEl(T0+20600,'oMaster');dlgClose('dlgCb',T0+20950);
+ cap(T0+22400,T,'Запрос уходит дилеру, а клиент возвращается в ленту<small>Стрелка «назад» — к списку новостей</small>');
+ tap(T0+23000,[28,54+28]);pop($('news'),$('home'),T0+23200);
+ return T;}
+
+/* 4. Поиск */
+function sceneSearch(T0){
+ const T=T0+13000;sceneBlock(T0,T,'Поиск');
+ cap(T0+200,T0+3600,'Поиск по всему приложению<small>Новости и сотрудники дилера — в одной строке поиска</small>');
+ fabTo(T0+1000,0);fadeOut('fab',T0+1000,200);
+ tapEl(T0+800,'icSearch');push($('home'),$('search'),T0+1000);
+ const keys=['k','g','m'];keys.forEach((k,i)=>{const t=T0+2100+i*380;tapEl(t,'key-'+k);press($('key-'+k).querySelector('.hl'),t);fadeIn('ch'+i,t+80,60);});
+ fadeOut('phd',T0+2180,60);fadeIn('sugg',T0+2180,120);fadeIn('sclear',T0+2180,120);
+ fadeOut('sEmpty',T0+3200,150);fadeIn('sRes',T0+3200,250);
+ cap(T0+3600,T0+6600,'Результаты появляются сразу при вводе<small>По запросу «kgm» найдены новости и сотрудник</small>');
+ tapEl(T0+5600,'srTrade');push($('search'),$('trade'),T0+5850);fadeIn('fab',T0+6000,200);
+ cap(T0+6600,T0+10200,'Найденная новость открывается целиком<small>Условия акции и связь с дилером</small>');
+ tap(T0+10000,[28,54+28]);pop($('trade'),$('search'),T0+10200);fadeOut('fab',T0+10200,150);
+ cap(T0+10200,T,'Назад — к результатам и в ленту<small>Поиск всегда под рукой в шапке приложения</small>');
+ tap(T0+11200,[28,54+28]);pop($('search'),$('home'),T0+11400);fadeIn('fab',T0+11600,200);
+ return T;}
+
+/* 5. Push-уведомление */
+function scenePush(T0){
+ const T=T0+14500;sceneBlock(T0,T,'Push-уведомления');
+ fadeIn('lock',T0,350);
+ cap(T0+200,T0+3900,'Персональные предложения приходят push-уведомлением<small>Даже когда приложение закрыто</small>');
+ anim('notif',T0+900,450,[{opacity:0,transform:'translateY(-30px)'},{opacity:1,transform:'none'}]);
+ tap(T0+3400,P('notif'));
+ setAt('offer',T0+3600,TX('0'));fadeOut('lock',T0+3650,350);
+ cap(T0+3900,T0+8800,'Нажатие открывает предложение в приложении<small>Фото, условия и сроки акции</small>');
+ const art=$('offArt'),bodyH=844-54-56,yEnd=offsetIn($('offRows'),art)-Math.round(bodyH*.42);
+ scrollY(art,T0+5200,4600,0,yEnd);
+ cap(T0+8800,T0+12600,'Позвонить, заказать звонок или отправить заявку — прямо из предложения<small>Например, заявку на кредит</small>');
+ tap(T0+12700,[28,54+28]);pop($('offer'),$('home'),T0+12900);
+ cap(T0+12600,T,'Назад — в ленту приложения');
+ return T;}
+
+/* 6. Запись на ТО */
+function sceneTO(T0){
+ const T=T0+16500;sceneBlock(T0,T,'Запись на ТО');
+ cap(T0+200,T0+3300,'Запись на техническое обслуживание<small>Пункт «ТО» в разделе «Услуги»</small>');
+ tapEl(T0+700,'tabSvc');tabTo(1,T0+900);
+ tapEl(T0+2500,'sTO');push($('home'),$('toForm'),T0+2750);
+ cap(T0+3300,T0+5600,'Запись на ТО — за несколько касаний<small>Автомобиль клиента уже указан в заявке</small>');
+ tapEl(T0+4300,'toDate');up($('calScr'),T0+4550);
+ cap(T0+5600,T0+9400,'Свободное время видно сразу<small>Клиент выбирает день и удобный час</small>');
+ setAt('sel24',T0+4550,{opacity:1});setAt('wt24',T0+4550,{opacity:1});
+ tapEl(T0+6200,'day27');fadeOut('sel24',T0+6350,150);fadeOut('wt24',T0+6350,150);fadeIn('sel27',T0+6350,150);fadeIn('wt27',T0+6350,150);
+ fadeOut('nofree',T0+6450,150);fadeIn('slots',T0+6600,250);
+ tapEl(T0+7900,'slot1630');fadeIn('on1630',T0+8000,120);
+ down($('calScr'),T0+8400);fadeOut($('toDate').querySelector('.ph'),T0+8400,1);valIn('toDateV',T0+8400);
+ cap(T0+9400,T0+12300,'Тип ТО — по пробегу и сроку<small>Например, ТО 3: 45 000 км или 36 месяцев</small>');
+ tapEl(T0+9600,'toType');push($('toForm'),$('toList'),T0+9850);
+ tapEl(T0+11300,'tt3');pop($('toList'),$('toForm'),T0+11550);fadeOut($('toType').querySelector('.ph'),T0+11550,1);valIn('toTypeV',T0+11550);okOn('toOk',T0+11700);
+ cap(T0+12300,T,'Заявка на ТО уходит дилеру<small>Подтверждение — галочкой в правом верхнем углу</small>');
+ tapEl(T0+13600,'toOk');pop($('toForm'),$('home'),T0+13800);
+ return T;}
+
+/* 7. Тест-драйв */
+function sceneDrive(T0){
+ const T=T0+12000;sceneBlock(T0,T,'Тест-драйв');
+ cap(T0+200,T0+2900,'Тест-драйв: выбор марки и модели<small>Из автомобилей, доступных у дилера</small>');
+ tapEl(T0+700,'sDrive');up($('brands'),T0+950);
+ tapEl(T0+2300,'bMazdaA');push($('brands'),$('mzModels'),T0+2550);
+ cap(T0+2900,T0+5300,'Доступные модели марки<small>Mazda CX 30 и CX-5</small>');
+ tapEl(T0+4400,'mCx5');push($('mzModels'),$('mzCar'),T0+4650);fabTo(T0+4650,-62);
+ cap(T0+5300,T0+9200,'Запись на тест-драйв — одной кнопкой<small>«Записаться на тест-драйв» на карточке модели</small>');
+ cap(T0+9200,T,'Назад — к списку услуг');
+ tap(T0+9000,[28,54+28]);pop($('mzCar'),$('mzModels'),T0+9200);fabTo(T0+9200,0);
+ tap(T0+9900,[28,54+28]);pop($('mzModels'),$('brands'),T0+10100);
+ tap(T0+10800,[28,54+28]);down($('brands'),T0+11000);
+ return T;}
+
+/* 8. Страховка и кредит */
+function sceneInsCredit(T0){
+ const T=T0+23500;sceneBlock(T0,T,'Страховка и кредит');
+ cap(T0+200,T0+3900,'Заявка на страхование<small>Срок и тип страховки — на выбор клиента</small>');
+ tapEl(T0+700,'sIns');push($('home'),$('insForm'),T0+950);
+ tapEl(T0+2200,'insTerm');dlgOpen('dlgIns',T0+2450);
+ tapEl(T0+3700,'mo2');dlgClose('dlgIns',T0+4000);fadeOut($('insTerm').querySelector('.ph'),T0+4000,1);valIn('insTermV',T0+4000);
+ fadeIn('insRadios',T0+4100,250);anim('insAttach',T0+4100,300,[{transform:'translateY(-104px)'},{transform:'translateY(0)'}]);
+ cap(T0+3900,T0+7000,'КАСКО или ОСАГО — одним касанием<small>Подтверждение — галочкой</small>');
+ tapEl(T0+5200,'rKasko',0,-110);fadeIn('rKaskoOn',T0+5300,150);okOn('insOk',T0+5400);
+ tapEl(T0+6400,'insOk');pop($('insForm'),$('home'),T0+6600);
+ cap(T0+7000,T0+12300,'Заявка на кредит: сначала автомобиль<small>Марка и модель из наличия дилера</small>');
+ tapEl(T0+7700,'sCredit');up($('brands2'),T0+7950);
+ tapEl(T0+9100,'bBaicB');push($('brands2'),$('bcModels'),T0+9350);
+ tapEl(T0+10600,'mU5');push($('bcModels'),$('bcCar'),T0+10850);fabTo(T0+10850,-62);
+ cap(T0+12300,T0+17000,'Заявка — прямо с карточки автомобиля<small>Первоначальный взнос и срок кредита</small>');
+ tapEl(T0+12300,'bcSend');push($('bcCar'),$('crForm'),T0+12550);fabTo(T0+12550,0);
+ tapEl(T0+13900,'crTerm');dlgOpen('dlgCr',T0+14150);
+ tapEl(T0+15300,'cr3');dlgClose('dlgCr',T0+15600);fadeOut($('crTerm').querySelector('.ph'),T0+15600,1);valIn('crTermV',T0+15600);okOn('crOk',T0+15800);
+ tapEl(T0+16900,'crOk');pop($('crForm'),$('bcCar'),T0+17100);fabTo(T0+17100,-62);
+ cap(T0+17000,T,'После подтверждения — снова карточка автомобиля<small>Оттуда — назад к услугам</small>');
+ tap(T0+19400,[28,54+28]);pop($('bcCar'),$('bcModels'),T0+19600);fabTo(T0+19600,0);
+ tap(T0+20300,[28,54+28]);pop($('bcModels'),$('brands2'),T0+20500);
+ tap(T0+21200,[28,54+28]);down($('brands2'),T0+21400);
+ return T;}
+
+function build(){
+ let t=0;
+ t=sceneFeed(t)+GAP;
+ t=sceneSearch(t)+GAP;
+ t=scenePush(t)+GAP;
+ t=sceneTO(t)+GAP;
+ t=sceneDrive(t)+GAP;
+ t=sceneInsCredit(t)+600;
+ window.TOTAL=t;
+}
+window.render=t=>{document.getElementById('dm-root').getAnimations({subtree:true}).forEach(a=>{a.pause();a.currentTime=t;});};
+(function(){const go=()=>{const root=document.getElementById('dm-root');
+ const imgs=[...root.querySelectorAll('img')].map(i=>i.complete?1:new Promise(r=>{i.addEventListener('load',r);i.addEventListener('error',r);}));
+ const fonts=['600 20px Inter','400 20px Inter','600 40px Unbounded','400 20px "Google Sans"'].map(f=>document.fonts.load(f).catch(()=>0));
+ Promise.all(imgs.concat(fonts)).then(()=>document.fonts.ready).then(()=>{build();window.render(0);window.READY=true;});};
+ document.readyState==='loading'?document.addEventListener('DOMContentLoaded',go):go();})();
+
+/* Вторая часть ролика: дилеры, сервисная история, помощь на дороге, автомобили и звонки, консультант. */
+
+Object.assign(I,{
+ wave:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 10v4M9.5 7v10M14.5 5v14M19 9v6"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+ pin:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5" fill="#fff"/></svg>',
+ globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>',
+ chat:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9l-5 4V5a1 1 0 0 1 1-1z"/><path d="M8 9h8M8 12.5h5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>',
+ pen:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 17.5V20h2.5L17 9.5 14.5 7zM15.6 5.9l2.5 2.5 1.6-1.6a1 1 0 0 0 0-1.4l-1.1-1.1a1 1 0 0 0-1.4 0z"/><rect x="3" y="21" width="18" height="1.6"/></svg>',
+ star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-2.9-5.4 2.9 1.1-6L3.2 9.4l6.1-.8z"/></svg>',
+ starF:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-2.9-5.4 2.9 1.1-6L3.2 9.4l6.1-.8z"/></svg>',
+ info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
+ bubble:'<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M24 8c10 0 18 6.3 18 14s-8 14-18 14c-2 0-4-.3-5.8-.8L10 40l2.3-7.3C8.4 30.2 6 26.3 6 22 6 14.3 14 8 24 8z"/><path d="M16 20h16M16 26h10" stroke-linecap="round"/></svg>',
+ inbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v11h14V9M9 13h6"/></svg>',
+ building:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V4h8v17M13 9h6v12"/><path d="M8 8h2M8 12h2M8 16h2M16 13h1M16 17h1"/></svg>',
+ help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17v.3"/></svg>',
+ gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>',
+ chats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 5h12v8H8l-4 3V5zM17 9h4v8l-3-2h-6v-2"/><path d="M6 9h.01M9 9h.01M12 9h.01" stroke-width="2.6" stroke-linecap="round"/></svg>',
+ compass:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></svg>',
+ dots:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+ sort:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M7 12h10M10 17h4"/></svg>',
+ carI:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 11l2-5h10l2 5h1a1 1 0 0 1 1 1v5h-2v2h-3v-2H8v2H5v-2H3v-5a1 1 0 0 1 1-1z"/><circle cx="7.5" cy="14" r="1.3" fill="#fff"/><circle cx="16.5" cy="14" r="1.3" fill="#fff"/></svg>',
+ bookmark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
+ bmAdd:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12v18l-6-4-6 4z"/><path d="M12 7v6M9 10h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>',
+ plusC:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ xC:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#fff"/><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ wrench:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 3a5 5 0 0 0-4.8 6.4L3 16.1V21h4.9l6.7-6.7A5 5 0 0 0 21 9.5l-3 3-3.5-3.5 3-3a5 5 0 0 0-3-3z"/></svg>',
+ mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+ cc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M10.5 10.2a2.2 2.2 0 1 0 0 3.6M17 10.2a2.2 2.2 0 1 0 0 3.6" stroke-linecap="round"/></svg>',
+ hang:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.5 13.5c5.4-4.6 13.6-4.6 19 0 .5.4.6 1.2.1 1.7l-2 2.2c-.4.4-1 .5-1.5.2l-2.6-1.6c-.4-.2-.6-.7-.5-1.1l.4-1.7a12 12 0 0 0-6.8 0l.4 1.7c.1.4-.1.9-.5 1.1L5.9 17.6c-.5.3-1.1.2-1.5-.2l-2-2.2c-.5-.5-.4-1.3.1-1.7z"/></svg>',
+ newchat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M17.5 3.5l3 3L12 15H9v-3z"/></svg>',
+ copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
+ up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
+});
+
+const css2=`
+.dl{position:relative;padding:14px 16px 10px;border-bottom:1px solid var(--line);background:#fff}
+.dl .top2{display:flex;gap:14px}.dl .ph2{width:96px;height:72px;object-fit:cover;border-radius:2px;flex:none}
+.dl .lg{height:15px;display:block;margin-top:2px}.dl .nm{font:400 17px/1.25 var(--ui);margin-top:6px;padding-right:56px}
+.dist{position:absolute;right:16px;top:14px;background:var(--accent);color:#fff;font:500 12px var(--ui);padding:3px 6px;border-radius:3px}
+.open{display:flex;align-items:center;gap:8px;margin-top:10px;font:400 14px var(--ui);color:#9a9aa0}
+.open svg{width:18px;height:18px;color:#9a9aa0}.open .st2{margin-left:auto;color:#9a9aa0}.open .st2 svg{width:20px;height:20px}
+.dc{position:relative}
+.dc .hero{width:100%;display:block;height:117px;object-fit:cover}
+.dc .lgr{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 0}.dc .lgr img{height:16px}
+.dc .dn2{font:500 21px var(--ui);padding:8px 16px 14px;border-bottom:1px solid var(--line)}
+.ir{display:flex;align-items:center;gap:22px;min-height:54px;padding:0 16px;font:400 15px var(--ui);color:var(--ink);position:relative}
+.ir svg{width:22px;height:22px;color:var(--accent);flex:none}.ir.a{color:var(--accent);font-size:16.5px}
+.grp2{display:flex;justify-content:space-between;align-items:flex-end;background:var(--feed);padding:16px 16px 8px;font:500 13px/1.25 var(--ui);color:#8e8e93;letter-spacing:.03em}
+.grp2 b{color:var(--accent);font-weight:600}
+.empw{background:var(--feed);padding:4px 0 18px;overflow:hidden}
+.emprow{display:flex;gap:10px;padding:0 16px}
+.ec{flex:none;width:150px;height:200px;background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.12);text-align:center;padding:14px 8px}
+.ec img,.ec .av2{width:56px;height:56px;border-radius:50%;object-fit:cover;display:block;margin:0 auto}
+.ec .av2{background:#e4e4e8;display:grid;place-items:center;color:#a8a8ae}.ec .av2 svg{width:30px;height:30px}
+.ec b{display:block;font:500 14px/1.25 var(--ui);margin-top:10px;color:var(--ink)}.ec small{display:block;font:400 12px var(--ui);color:#9a9aa0;margin-top:6px}
+.stars{display:flex;justify-content:center;gap:2px;margin-top:10px;color:#f5b800}.stars svg{width:17px;height:17px}.stars .no{color:#dcdce0}
+.ec .more2{width:56px;height:56px;border-radius:50%;background:#e8f2f3;display:grid;place-items:center;margin:40px auto 0;color:var(--accent)}
+.chempty{position:absolute;left:0;right:0;top:250px;text-align:center}
+.chempty svg{width:64px;height:64px;color:var(--accent)}.chempty b{display:block;font:400 19px var(--ui);margin-top:10px}.chempty small{display:block;font:400 14px var(--ui);color:#9a9aa0;margin-top:6px}
+.chin{position:absolute;left:0;right:0;bottom:34px;height:52px;border-top:1px solid var(--line);padding:0 16px;display:flex;align-items:center;font:400 16px var(--ui);color:#9a9aa0;background:#fff}
+/* боковое меню */
+.mdim{position:absolute;inset:0;background:rgba(20,22,26,.55);opacity:0;z-index:47}
+.menu{position:absolute;left:0;top:0;bottom:0;width:330px;background:#fff;z-index:48;transform:translateX(-100%)}
+.mh{display:flex;align-items:center;gap:14px;height:106px;padding:0 16px;border-bottom:1px solid var(--line);position:relative}
+.mh img{width:56px}.mh b{display:block;font:400 22px var(--ui)}.mh small{display:block;font:400 15px var(--ui);margin-top:2px}
+.mh .dt3{margin-left:auto;color:var(--accent)}.mh .dt3 svg{width:26px;height:26px}
+.mr{display:flex;align-items:center;gap:22px;height:52px;padding:0 16px;font:400 17px var(--ui);color:var(--ink)}
+.mr svg{width:24px;height:24px;flex:none}.mr .cnt{margin-left:auto;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);font:400 13px var(--ui);display:grid;place-items:center}
+.msep{height:1px;background:var(--line);margin:4px 0}
+.road{position:absolute;left:0;right:0;bottom:0;height:78px;background:#ef3b3b;color:#fff;font:500 16px var(--ui);letter-spacing:.03em;display:flex;justify-content:center;padding-top:20px}
+/* сервисная история */
+.shr{display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee;background:#fff;position:relative}
+.shr b{display:block;font:400 15.5px var(--ui)}.shr small{display:block;font:400 13px var(--ui);color:#9a9aa0;margin-top:4px}
+.shr .r2{text-align:right}.shr .r2 b{color:var(--accent)}
+.tot{background:#fff;text-align:center;padding:22px 0 20px;border-bottom:1px solid var(--line)}
+.tot small{display:block;font:500 13px var(--ui)}.tot b{display:block;font:200 44px var(--display);margin:14px 0 10px}.tot span{font:400 13px var(--ui);color:#9a9aa0}
+.shd{display:flex;align-items:center;gap:14px;padding:12px 16px;background:#fff;border-bottom:1px solid var(--line);font:500 15px var(--ui)}.shd img{width:72px;height:52px;object-fit:cover}
+.wk2{background:#fff;margin:0 8px 8px;padding:12px 10px;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.wk2 .t3{display:flex;justify-content:space-between;align-items:center;font:600 14.5px var(--ui)}.wk2 svg{width:20px;height:20px;color:#8e8e93}
+.wk2 p{margin:6px 0 0;font:400 13px/1.35 var(--ui);color:#8e8e93}
+/* помощь на дороге */
+.rr{display:flex;justify-content:space-between;align-items:center;height:52px;padding:0 16px;border-bottom:1px solid #eee;font:400 16px var(--ui)}.rr svg{width:22px;height:22px;color:var(--ink)}
+/* витрина */
+.vtabs{display:flex;gap:6px;height:46px;padding:0 6px;border-bottom:1px solid var(--line);position:relative;background:#fff}
+.vtabs div{padding:0 12px;font:500 14px/46px var(--ui);color:var(--ink)}
+.vul{position:absolute;bottom:-1px;height:3px;background:var(--accent)}
+.vsort{display:flex;align-items:center;gap:14px;height:50px;padding:0 16px;font:400 16px var(--ui);color:var(--accent);background:#f6f6f8;border-bottom:1px solid var(--line)}.vsort svg{width:22px;height:22px}
+.vcount{display:flex;justify-content:space-between;align-items:center;height:50px;padding:0 16px;font:400 16px var(--ui);background:#fff;position:relative}.vcount svg{width:22px;height:22px;color:var(--accent)}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
+.vt{background:#fff;position:relative}.vt img{width:100%;height:147px;object-fit:cover;display:block}
+.vt .b1{display:flex;justify-content:space-between;padding:8px 8px 0;font:400 14px var(--ui);color:var(--accent)}.vt .b1 span:last-child{color:#9a9aa0}
+.vt .pr2{font:700 16.5px var(--ui);padding:6px 8px 0}.vt .md{font:400 14px var(--ui);padding:6px 8px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmpbar{position:absolute;left:0;right:0;bottom:34px;height:52px;border-top:1px solid var(--line);background:#fff;display:flex;align-items:center;gap:14px;padding:0 16px;font:400 16px var(--ui);color:#8e8e93;z-index:2}
+.cmpbar>svg{width:22px;height:22px;color:#46b54a}.cmpbar .n2{margin-left:auto;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);font:400 12px var(--ui);display:grid;place-items:center}.cmpbar .ch{width:18px;height:18px;color:var(--accent)}
+.callfab{position:absolute;right:16px;bottom:174px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#fff;z-index:41;opacity:0;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+.callfab svg{width:26px;height:26px}
+.callfab.cell{background:var(--accent)}
+.callfab.ai{background:linear-gradient(180deg,rgba(255,255,255,.35) 0%,rgba(255,255,255,0) 60%),linear-gradient(115deg,#2b7cff 0%,#6a4dff 50%,#b83cff 100%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),0 8px 20px rgba(80,50,220,.5)}
+.callfab.ai i{position:absolute;right:-2px;top:-2px;width:20px;height:20px;border-radius:50%;background:#fff;color:#6a4dff;display:grid;place-items:center}.callfab.ai i svg{width:14px;height:14px}
+.cv .ttl2{background:#fff;padding:16px 16px 14px;border-bottom:1px solid var(--line)}.cv .ttl2 b{display:block;font:400 19px var(--ui)}.cv .ttl2 small{display:block;font:400 15px var(--ui);color:#9a9aa0;margin-top:4px}
+.kv{background:#fff;padding:12px 16px;border-bottom:1px solid var(--line)}.kv small{display:block;font:400 12px var(--ui);color:#9a9aa0}.kv b{display:block;font:400 16px var(--ui);margin-top:6px}
+.cv .desc{background:#fff;margin-top:10px;padding:14px 16px;font:400 14.5px/1.4 var(--ui)}
+.cbot{position:absolute;left:0;right:0;bottom:34px;background:#fff;border-top:1px solid var(--line);z-index:2}
+.cadd{display:flex;align-items:center;gap:14px;height:50px;padding:0 16px;font:400 16px var(--ui);color:var(--accent);position:relative}.cadd svg{width:22px;height:22px}
+.cadd .n2{margin-left:auto;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--accent);font:400 12px var(--ui);display:grid;place-items:center}
+.cadd2{position:absolute;inset:0;background:#fff;opacity:0;display:flex;align-items:center;gap:14px;padding:0 16px;font:400 16px var(--ui);color:#8e8e93}.cadd2>span:first-child{color:#46b54a}
+.cbtn{margin:0 16px 10px;height:50px;background:var(--accent);color:#fff;border-radius:3px;font:600 14.5px var(--ui);letter-spacing:.03em;display:grid;place-items:center}
+.cmpw{overflow:hidden}.cmpcols{display:flex}
+.cc2{flex:none;width:162px}.cc2 .im{position:relative}.cc2 .im img{width:100%;height:127px;object-fit:cover;display:block}
+.cc2 .im .x{position:absolute;right:6px;top:6px;color:var(--accent)}.cc2 .im .x svg{width:24px;height:24px}
+.cc2 .im .km{position:absolute;left:6px;bottom:6px;background:rgba(255,255,255,.9);font:400 11.5px var(--ui);padding:2px 5px}
+.cc2 .b1{display:flex;justify-content:space-between;padding:8px 8px 0 12px;font:400 14px var(--ui);color:var(--accent)}.cc2 .b1 span:last-child{color:#9a9aa0}
+.cc2 .pr2{font:700 16px var(--ui);padding:6px 12px 0}.cc2 .md{font:400 13.5px var(--ui);padding:6px 12px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.attr{border-top:1px solid #eee;padding:12px 12px 10px}.attr b{display:block;font:400 16px var(--ui)}.attr .vals{display:flex;margin-top:12px}.attr .vals span{flex:none;width:162px;font:400 14px var(--ui);color:#9a9aa0}
+/* звонок ИИ */
+.aicall{position:absolute;inset:0;z-index:85;opacity:0;color:#fff;background:radial-gradient(90% 60% at 50% 42%,#2a2470 0%,#0d1030 70%)}
+.aicall .st{position:absolute;left:0;right:0;top:0;height:54px;display:flex;justify-content:space-between;align-items:center;padding:6px 30px 0 44px;font:600 17px var(--ui)}
+.aicall .st .batt{background:#fff;color:#000}
+.aicall .who{position:absolute;left:0;right:0;top:96px;text-align:center}
+.aicall .who b{display:block;font:600 24px var(--ui)}.aicall .who small{display:block;font:400 15px var(--ui);color:#b9bce6;margin-top:6px}
+.orbw{position:absolute;left:50%;top:250px;width:190px;height:190px;margin-left:-95px}
+.orb{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,#9fd0ff 0%,#2b7cff 30%,#6a4dff 62%,#b83cff 100%);box-shadow:0 0 60px rgba(120,90,255,.7),0 0 120px rgba(43,124,255,.45)}
+.orbr{position:absolute;inset:-18px;border-radius:50%;border:2px solid rgba(160,150,255,.35)}
+.subs{position:absolute;left:24px;right:24px;top:480px;height:150px;text-align:center}
+.sub{position:absolute;left:0;right:0;top:0;opacity:0;font:400 18px/1.4 var(--ui)}.sub i{display:block;font-style:normal;font:500 13px var(--ui);color:#a9adf0;margin-bottom:6px;letter-spacing:.04em}
+.aib{position:absolute;left:0;right:0;bottom:70px;display:flex;justify-content:space-around;padding:0 30px}
+.aib div{text-align:center;font:400 12.5px var(--ui);color:#c9cbef}.aib span{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;margin:0 auto 8px;background:rgba(255,255,255,.14);color:#fff}
+.aib span svg{width:28px;height:28px}.aib .end span{background:#ff3b30}.aib .on span{background:#fff;color:#2a2470}
+/* чат консультанта */
+.cmsg{position:absolute;left:0;right:0;top:56px;bottom:0;padding:20px 18px 0;display:flex;flex-direction:column;gap:20px}
+.me{align-self:flex-end;max-width:78%;background:#f0f0f2;border-radius:20px;padding:11px 15px;font:400 16px/1.38 var(--ui)}
+.bot{font:400 16px/1.45 var(--ui);display:flex;flex-direction:column;gap:10px}.bot p{margin:0}
+.bot ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:4px}
+.acts2{display:flex;gap:18px;color:var(--grey)}.acts2 svg{width:18px;height:18px}
+.typing{display:flex;gap:5px;opacity:0}.typing i{width:8px;height:8px;border-radius:50%;background:#c7c7cc}
+.callnote{align-self:center;font:400 13px var(--ui);color:#8e8e93;background:#f4f4f6;border-radius:12px;padding:5px 12px}
+.composer{position:absolute;left:0;right:0;bottom:34px;padding:8px 14px;display:flex;align-items:center;gap:10px;background:#fff}
+.plus{width:40px;height:40px;border-radius:50%;background:#f0f0f2;display:grid;place-items:center}.plus svg{width:20px;height:20px}
+.cfield{flex:1;height:44px;border-radius:22px;border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 5px 0 16px;color:var(--grey);font:400 16px var(--ui)}
+.send{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(115deg,#2b7cff 0%,#6a4dff 50%,#b83cff 100%)}.send svg{width:18px;height:18px}
+`;
+document.head.insertAdjacentHTML('beforeend','<style>'+css2+'</style>');
+
+/* --- главный экран: вкладки «Дилеры» и «Автомобили», значок меню --- */
+document.querySelector('#home .top img').id='homeLogo';
+const tabsEl=$('tabs').children;tabsEl[0].id='tabFeed';tabsEl[2].id='tabDl';tabsEl[3].id='tabCar';
+const open2=`<div class="open"><span data-i="clock"></span>Открыто (закроется через 7 ч 1 мин)<span class="st2" data-i="star"></span></div>`;
+const dealers=[['dl-chery','dl-chery-logo','МегаДилер CHERY | TENET на Калужской','800 м'],['dl-kgm','dl-kgm-logo','МегаДилер KGM','830 м'],['dl-am','dl-am-logo','Автомаркет м.Калужская','840 м'],['dl-baic','dl-baic-logo','МегаДилер BAIC','840 м'],['dl-kia','dl-kia-logo','МегаДилер KIA на Калужской','840 м'],['dl-suzuki','dl-suzuki-logo','МегаДилер SUZUKI на Калужской','840 м'],['dl-mazda','dl-mazda-logo','МегаДилер МАЗДА','840 м']];
+document.querySelector('#home .panels').insertAdjacentHTML('beforeend',`
+ <div class="panel" id="pDl" style="transform:translateX(100%);background:var(--feed)"><div id="dlList"><div class="grp">БЛИЖАЙШИЕ</div>
+  ${dealers.map((d,i)=>`<div class="dl" id="dl${i}"><div class="press" id="p-dl${i}"></div><div class="top2"><img class="ph2" src="https://1416363.github.io/DM-demo/img/${d[0]}.jpg"><div><img class="lg" src="https://1416363.github.io/DM-demo/img/${d[1]}.jpg"><div class="nm">${d[2]}</div></div></div><span class="dist">${d[3]}</span>${open2}</div>`).join('')}</div></div>
+ <div class="panel" id="pCar" style="transform:translateX(100%);background:var(--feed)"><div class="ir" id="carRow" style="background:#fff;border-top:8px solid var(--feed);font-size:16.5px"><div class="press" id="p-carRow"></div><span data-i="carI"></span><span style="flex:1">Автомобили</span><span style="color:#9a9aa0">184</span></div></div>`);
+$('icSvc').insertAdjacentHTML('afterend','<div id="icNone" style="opacity:0"></div>');
+fill($('home'));
+
+/* --- карточка автоцентра и чат с дилером --- */
+const emps=[['emp-mitchenkov','Митченков<br>Сергей','Мастер-консульта…',5],[null,'Тишининов<br>Евгений','Мастер-консульта…',5],['emp-burenkov','Буренков<br>Максим','Мастер-консульта…',5],['emp-illarionshin','Илларионшин<br>Сергей','Мастер-консульта…',2],['emp-korovina','Коровина Олеся','специалист по ст…',0]];
+const stars=n=>n?`<div class="stars">${[1,2,3,4,5].map(k=>`<span class="${k<=n?'':'no'}" data-i="starF"></span>`).join('')}</div>`:'';
+screen('dCard',`${nav('','back','<span data-i="star"></span><span data-i="share"></span>')}
+ <div class="body"><div class="dc" id="dcArt">
+  <img class="hero" src="https://1416363.github.io/DM-demo/img/kia-hero.jpg"><div class="lgr"><img src="https://1416363.github.io/DM-demo/img/kia-logos.jpg"><span class="dist" style="position:static">840 м</span></div>
+  <div class="dn2">МегаДилер KIA на Калужской</div>
+  <div class="ir"><span data-i="clock"></span>Открыто (закроется через 7 ч 1 мин)</div>
+  <div class="ir"><span data-i="pin"></span>улица Введенского, 4А, Москва,</div>
+  <div class="ir" style="border-bottom:1px solid var(--line)"><span data-i="globe"></span>http://www.sim-kia.ru/</div>
+  <div class="ir a"><span data-i="phone"></span>Звонок дилеру</div>
+  <div class="ir a"><span data-i="headset"></span>Обратный звонок</div>
+  <div class="ir a" id="dcChat"><div class="press" id="p-dcChat"></div><span data-i="chat"></span>Чат</div>
+  <div class="ir a"><span data-i="pen"></span>Заявка</div>
+  <div class="grp2" id="dcSo"><span>СПЕЦИАЛЬНЫЕ<br>ПРЕДЛОЖЕНИЯ</span><b>ПОКАЗАТЬ ВСЕ</b></div>
+  <div class="mini"><img src="https://1416363.github.io/DM-demo/img/so-1.jpg"><div>${badge()}<div class="h">БЕСПЛАТНОЕ ТО-75 000 км. в «МегаДилер-КИА».</div></div></div>
+  <div class="mini"><img src="https://1416363.github.io/DM-demo/img/so-2.jpg"><div>${badge()}<div class="h">Комплимент от механика на 3000 рублей!</div></div></div>
+  <div class="mini"><img src="https://1416363.github.io/DM-demo/img/so-3.jpg"><div>${badge()}<div class="h">ПРОГРАММА ПРИВИЛЕГИЙ</div></div></div>
+  <div class="grp2"><span>СОТРУДНИКИ</span><b>ПОКАЗАТЬ СПИСКОМ</b></div>
+  <div class="empw"><div class="emprow" id="empRow">${emps.map(e=>`<div class="ec">${e[0]?`<img src="https://1416363.github.io/DM-demo/img/${e[0]}.jpg">`:'<span class="av2" data-i="person"></span>'}<b>${e[1]}</b><small>${e[2]}</small>${stars(e[3])}</div>`).join('')}<div class="ec"><span class="more2" data-i="chev"></span><small style="margin-top:14px">Показать больше</small></div></div></div>
+  <div style="height:120px;background:var(--feed)"></div>
+ </div></div>`);
+screen('dChat',`<div class="nav"><span data-i="back"></span><div class="tt">МегаДилер KIA на Калужской</div><span data-i="info"></span></div>
+ <div class="chempty"><span data-i="bubble"></span><b>Готов к общению</b><small>Задайте любой вопрос дилеру</small></div>
+ <div class="chin">Чат с дилером…</div>`);
+
+/* --- боковое меню --- */
+vpEl('mdim','mdim','');
+vpEl('menu','menu',`<div class="mh" id="mCar"><div class="press" id="p-mCar"></div><img src="https://1416363.github.io/DM-demo/img/car-torres-icon.jpg"><div><b>Torres</b><small>2024</small></div><span class="dt3" data-i="dots"></span></div>
+ <div class="mr"><span data-i="inbox"></span>Входящие<span class="cnt">13</span></div>
+ <div class="mr"><span data-i="building"></span>МегаДилер</div>
+ <div class="mr"><span data-i="help"></span>Помощь и поддержка</div>
+ <div class="mr"><span data-i="gear"></span>Мои бонусы, профиль, настро…</div>
+ <div class="mr"><span data-i="chats"></span>Чат</div><div class="msep"></div>
+ <div class="mr"><span data-i="compass"></span>Автосервис АвтоЭксперт</div>
+ <div class="mr"><span data-i="compass"></span>Детейлинг Краснодар</div>
+ <div class="mr"><span data-i="compass"></span>Оформить ОСАГО</div>
+ <div class="mr"><span data-i="compass"></span>Оценить авто</div>
+ <div class="mr"><span data-i="compass"></span>Подбор автозапчастей</div>
+ <div class="mr"><span data-i="compass"></span>РОБОТ-МОЙКА</div>
+ <div class="road" id="mRoad"><div class="press" id="p-mRoad" style="background:rgba(255,255,255,.2)"></div>ПОМОЩЬ НА ДОРОГЕ</div>`);
+
+/* --- сервисная история --- */
+const orders=[['#59493','13 814,30 ₽','29 сент. 2019 г.'],['#17021','9 375 ₽','27 нояб. 2018 г.'],['#77854','32 813,90 ₽','7 нояб. 2018 г.'],['#07801','27 800 ₽','16 окт. 2018 г.'],['#68674','20 094,84 ₽','28 июл. 2018 г.']];
+screen('shList',`${nav('Сервисная история','back','<span data-i="cal"></span>','Torres, 2024')}
+ <div class="body" style="background:var(--feed);padding-top:16px">${orders.map((o,i)=>`<div class="shr" id="sh${i}"><div class="press" id="p-sh${i}"></div><div><b>${o[0]}</b><small>МегаДилер</small></div><div class="r2"><b>${o[1]}</b><small>${o[2]}</small></div></div>`).join('')}</div>`);
+const works=[['2 340 ₽','Скоба тормозного суппорта профилактическое обслуживание демонтаж, очистка, монтаж'],['3 900 ₽','Углы установки колес - проверка и регулировка'],['1 170 ₽','Защита поддона картера двигателя - снять и установить'],['3 900 ₽','Чистка и смазка болтов рычагов подвески автомобиля']];
+screen('shDet',`${nav('#77854','back','','Torres, 2024')}
+ <div class="body" style="background:var(--feed)"><div id="shArt">
+  <div class="tot"><small>Общая стоимость</small><b>32 813,90 ₽</b><span>Дата: 7 нояб. 2018 г.</span></div>
+  <div class="shd" style="margin-top:8px"><img src="https://1416363.github.io/DM-demo/img/sh-dealer.jpg">МегаДилер</div>
+  <div class="grp2"><span>ВЫПОЛНЕННЫЕ РАБОТЫ</span><span style="color:var(--ink)">21 450 ₽</span></div>
+  ${works.map(w=>`<div class="wk2"><div class="t3"><span data-i="wrench"></span><span>${w[0]}</span></div><p>${w[1]}</p></div>`).join('')}
+ </div></div>`);
+
+/* --- помощь на дороге --- */
+const road=['Audi','Помощь на дороге','Помощь на дороге Jaguar Land Rover Le…','JAGUAR LAND ROVER','Chevrolet','MINI','VOLKSWAGEN','MERCEDES-BENZ','FORD','PEUGEOT ASSISTANCE','Citroen Assistance'];
+screen('roadScr',`${nav('Помощь на дороге')}<div class="body"><div id="roadArt"><div class="grp">ПОЗВОНИТЬ</div>${road.map(r=>`<div class="rr">${r}<span data-i="phone"></span></div>`).join('')}<div style="height:120px"></div></div></div>`);
+
+/* --- витрина, карточка автомобиля, сравнение --- */
+const tile=(img,b,y,p,m)=>`<div class="vt"><img src="https://1416363.github.io/DM-demo/img/${img}.jpg"><div class="b1"><span>${b}</span><span>${y}</span></div><div class="pr2">${p}</div><div class="md">${m}</div></div>`;
+screen('vit',`${nav('Автомобили')}
+ <div class="body"><div class="vtabs"><div id="vAll">ВСЕ</div><div id="vNew">НОВЫЕ</div><div>С ПРОБЕГОМ</div><i class="vul" id="vul" style="left:6px;width:58px"></i></div>
+  <div class="vsort"><span data-i="sort"></span>Дата добавления</div>
+  <div class="vcount"><span id="cnt184">184 доступно</span><span id="cnt142" style="position:absolute;left:16px;opacity:0;background:#fff">142 доступно</span><span data-i="filter"></span></div>
+  <div style="position:relative">
+   <div class="vgrid" id="gAll">${tile('vt-1','KGM',2025,'3 395 000 ₽','Tivoli, 1.5 AT (163 л.с.)')}${tile('vt-2','KGM',2025,'3 395 000 ₽','Tivoli, 1.5 AT (163 л.с.)')}${tile('vt-3','KGM',2025,'3 395 000 ₽','Tivoli, 1.5 AT (163 л.с.)')}${tile('vt-4','KGM',2025,'3 600 000 ₽','Tivoli, 1.5 AT (163 л.с.)')}</div>
+   <div class="vgrid" id="gNew" style="position:absolute;left:0;right:0;top:0;opacity:0">${tile('vn-1','KGM',2024,'5 330 000 ₽','Torres, 1.5 AT (163 л.с.) …')}<div id="tTorres" style="position:relative"><div class="press" id="p-tTorres"></div>${tile('vn-2','KGM',2024,'5 330 000 ₽','Torres, 1.5 AT (163 л.с.) …')}</div>${tile('vn-3','KGM',2024,'5 330 000 ₽','Torres, 1.5 AT (163 л.с.) …')}${tile('vn-4','KGM',2024,'5 330 000 ₽','Torres, 1.5 AT (163 л.с.) …')}</div>
+  </div></div>
+ <div class="cmpbar"><span data-i="bookmark"></span>Сравнение автомобилей<span class="n2">2</span><span class="ch" data-i="chev"></span></div>`);
+screen('carScr',`${nav('KGM','back','','2024')}
+ <div class="body" style="background:var(--feed)"><div class="cv" id="carArt">
+  <img src="https://1416363.github.io/DM-demo/img/vn-2.jpg" style="width:100%;height:250px;object-fit:cover;display:block">
+  <div class="ttl2"><b>Torres, 1.5 AT (163 л.с.) 4WD</b><small>5 330 000 ₽</small></div>
+  <div class="kv"><small>VIN</small><b>*************9204</b></div>
+  <div class="kv"><small>Цвет</small><b>серый</b></div>
+  <div class="desc">✅ Гарантия - 5 лет или 100 000 км, в зависимости от того, что наступит раньше.<br>✅ Рассрочка.<br>✅ Оценка Вашего автомобиля в Trade-in по рыночной стоимости.<br>✅ Сниженная процентная ставка по кредиту.<br>✅ Корейские двигатели/ японские трансмиссии.<br>✅ Полностью русифицированные системы.</div>
+  <div style="height:200px"></div></div></div>
+ <div class="cbot"><div class="cadd" id="cAdd"><span data-i="bmAdd"></span>Добавить к сравнению<span class="n2" id="cN">2</span><span data-i="chev" style="width:18px;height:18px"></span>
+   <div class="cadd2" id="cAdd2"><span data-i="bookmark"></span>Удалить из списка сравнения<span class="n2" id="cN3" style="color:var(--accent)">3</span><span data-i="chev" style="width:18px;height:18px;color:var(--accent)"></span></div></div>
+  <div class="cbtn">СВЯЗАТЬСЯ С ДИЛЕРОМ</div></div>`);
+const cmpCars=[['cmp-hy17','104 779 км','Hyundai',2017,'2 030 000 ₽','Santa Fe,2.4 AT (17…'],['cmp-hy13','152 810 км','Hyundai',2013,'1 100 000 ₽','ix35,2.0 AT (150 л.с.…'],['vn-2','Новый','KGM',2024,'5 330 000 ₽','Torres,1.5 AT (163 л…']];
+const attrs=[['Цвет',['Белый','Красный','серый']],['Трансмиссия',['Автомат','Автомат','—']],['Мощность (л. с.)',['171','150','—']],['Тип двигателя',['Бензин инжектор','Бензин инжектор','—']],['Тип кузова',['Внедорожник','Внедорожник','Внедорожник 5 дв.']]];
+screen('cmpScr',`${nav('Сравнение автомобил…','close','<span data-i="plusC"></span>','3 из 5')}
+ <div class="body"><div class="cmpw"><div id="cmpIn" style="width:486px">
+  <div class="cmpcols">${cmpCars.map(c=>`<div class="cc2"><div class="im"><img src="https://1416363.github.io/DM-demo/img/${c[0]}.jpg"><span class="x" data-i="xC"></span><span class="km">${c[1]}</span></div><div class="b1"><span>${c[2]}</span><span>${c[3]}</span></div><div class="pr2">${c[4]}</div><div class="md">${c[5]}</div></div>`).join('')}</div>
+  ${attrs.map(a=>`<div class="attr"><b>${a[0]}</b><div class="vals">${a[1].map(v=>`<span>${v}</span>`).join('')}</div></div>`).join('')}
+ </div></div></div>`);
+
+/* --- кнопки звонка на витрине --- */
+$('phone').insertAdjacentHTML('beforeend',`<div class="callfab cell" id="callCell" data-i="phone"></div><div class="callfab ai" id="callAI"><span data-i="phone"></span><i data-i="spark"></i></div>`);
+fill($('phone'));
+
+/* --- звонок ИИ-консультанту --- */
+const subsT=[['ВЫ','Здравствуйте! Хочу записаться на ТО.'],['КОНСУЛЬТАНТ','Здравствуйте! Помогу с записью в сервис. Чтобы подобрать ближайшее свободное время, подскажите: модель автомобиля, примерный пробег и удобный день для визита.'],['ВЫ','Mazda CX-5, пробег около 60 000 км. Удобно в субботу утром.']];
+$('phone').insertAdjacentHTML('beforeend',`<div class="aicall" id="aiCall">
+ <div class="st"><span>01:56</span><span style="display:flex;gap:6px;align-items:center;font-size:15px"><span class="bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:9px"></i><i style="height:12px;opacity:.4"></i></span>LTE<span class="batt">85</span></span></div>
+ <div class="who"><b>ИИ-консультант</b><small>Звонок через интернет · <span id="tmr" style="position:relative;display:inline-block;width:42px;text-align:left">${Array.from({length:16},(_,i)=>`<span class="tm" style="position:absolute;left:0;opacity:${i?0:1}">00:${String(i).padStart(2,'0')}</span>`).join('')}</span></small></div>
+ <div class="orbw"><div class="orbr" id="orbR"></div><div class="orb" id="orb"></div></div>
+ <div class="subs">${subsT.map((s,i)=>`<div class="sub" id="sub${i}"><i>${s[0]}</i>${s[1]}</div>`).join('')}</div>
+ <div class="aib"><div><span data-i="mic"></span>Микрофон</div><div class="on"><span data-i="cc"></span>Субтитры</div><div class="end" id="aiEnd"><span data-i="hang"></span>Завершить</div></div></div>`);
+fill($('aiCall'));
+
+/* --- чат консультанта --- */
+screen('chat',`<div class="nav"><span data-i="back"></span><div class="tt" style="text-align:center">Консультант</div><span data-i="newchat"></span></div>
+ <div class="chempty" id="chEmpty"><span data-i="bubble"></span><b>Готов к общению</b><small>Задайте любой вопрос консультанту</small></div>
+ <div class="cmsg" id="chMsgs" style="opacity:0">
+  <div class="callnote">Звонок ИИ-консультанту · 00:11</div>
+  <div class="me">Здравствуйте! Хочу записаться на ТО.</div>
+  <div class="bot"><p>Здравствуйте! Помогу с записью в сервис. Чтобы подобрать ближайшее свободное время, подскажите:</p><ol><li>модель автомобиля;</li><li>примерный пробег;</li><li>удобный день для визита.</li></ol>
+   <div class="acts2"><span data-i="copy"></span></div></div>
+  <div class="me">Mazda CX-5, пробег около 60&nbsp;000&nbsp;км. Удобно в субботу утром.</div>
+  <div class="typing" id="typing"><i></i><i></i><i></i></div></div>
+ <div class="composer"><div class="plus" data-i="plus"></div><div class="cfield">Сообщение<span class="send" id="voiceBtn" data-i="wave"></span></div></div>`);
+
+/* ---------------- вкладки (4 шт.) ---------------- */
+const PAN4=['pFeed','pSvc','pDl','pCar'],ICON4=['icFeed','icSvc','icFeed','icNone'];let tab4=0;
+tabTo=function(i,t){const a=PAN4[tab4],b=PAN4[i],dir=i>tab4?1:-1;
+ anim(b,t,380,[TX(dir*100+'%'),TX('0')]);anim(a,t,380,[TX('0'),TX(-dir*100+'%')]);
+ anim('uline',t,380,[{transform:`translateX(${tab4*97.5}px)`},{transform:`translateX(${i*97.5}px)`}]);
+ if(ICON4[tab4]!==ICON4[i]){fadeOut(ICON4[tab4],t);fadeIn(ICON4[i],t);}
+ tab4=i;};
+/* меню */
+function menuOpen(t){fadeIn('mdim',t,300);anim('menu',t,350,[TX('-100%'),TX('0')]);}
+function menuClose(t){fadeOut('mdim',t,250);anim('menu',t,300,[TX('0'),TX('-100%')]);}
+$('phone').dataset.root=0;
+/* показать экран поверх главного без сдвига (из меню) */
+function cover(b,t){anim(b,t,380,[TX('100%'),TX('0')]);}
+function uncover(b,t){anim(b,t,380,[TX('0'),TX('100%')]);}
+
+/* ---------------- сцены второй части ---------------- */
+/* 9. Дилеры */
+function sceneDealers(T0){
+ const T=T0+21000;sceneBlock(T0,T,'Дилеры');
+ cap(T0+200,T0+5000,'Все автоцентры дилера в одном списке<small>Расстояние, часы работы, избранное</small>');
+ tapEl(T0+600,'tabDl');tabTo(2,T0+800);
+ scrollY('dlList',T0+2200,1800,0,300);
+ tapEl(T0+4600,'dl4',300);push($('home'),$('dCard'),T0+4850);
+ cap(T0+5000,T0+9200,'Карточка автоцентра<small>Адрес, сайт и все способы связи: звонок, обратный звонок, чат, заявка</small>');
+ const art=$('dcArt'),ySo=offsetIn($('dcSo'),art);
+ scrollY(art,T0+7000,2200,0,ySo-20);
+ cap(T0+9200,T0+13600,'Спецпредложения и сотрудники автоцентра<small>Мастера-консультанты с оценками клиентов</small>');
+ anim('empRow',T0+11000,1600,[{transform:'translateX(0)'},{transform:'translateX(-330px)'}],'cubic-bezier(.45,.05,.25,1)');
+ scrollY(art,T0+13000,1400,ySo-20,0);
+ cap(T0+13600,T0+18200,'Чат с дилером — прямо из карточки<small>Оперативная поддержка сотрудника автоцентра</small>');
+ tapEl(T0+15000,'dcChat');push($('dCard'),$('dChat'),T0+15250);fadeOut('fab',T0+15250,200);
+ tap(T0+18200,[28,54+28]);pop($('dChat'),$('dCard'),T0+18400);fadeIn('fab',T0+18600,200);
+ cap(T0+18200,T,'Назад — к списку автоцентров');
+ tap(T0+19400,[28,54+28]);pop($('dCard'),$('home'),T0+19600);
+ return T;}
+
+/* 11. Сервисная история */
+function sceneHistory(T0){
+ const T=T0+15000;sceneBlock(T0,T,'Сервисная история');
+ cap(T0+200,T0+3200,'Боковое меню: автомобиль клиента и все разделы<small>Открывается значком в левом верхнем углу</small>');
+ tapEl(T0+600,'homeLogo');menuOpen(T0+800);
+ tapEl(T0+2400,'mCar');cover($('shList'),T0+2650);menuClose(T0+2900);
+ cap(T0+3200,T0+6600,'Сервисная история автомобиля<small>Все заказ-наряды: номер, дата и сумма. Работает при интеграции с учётной системой дилера (DMS)</small>');
+ tapEl(T0+5600,'sh2');push($('shList'),$('shDet'),T0+5850);
+ cap(T0+6600,T0+11600,'Состав работ по каждому заказ-наряду<small>И итоговая стоимость</small>');
+ scrollY('shArt',T0+8200,1600,0,160);
+ tap(T0+11600,[28,54+28]);pop($('shDet'),$('shList'),T0+11800);
+ cap(T0+11600,T,'Назад — на главный экран');
+ tap(T0+12600,[28,54+28]);uncover($('shList'),T0+12800);
+ return T;}
+
+/* 12. Помощь на дороге */
+function sceneRoad(T0){
+ const T=T0+11000;sceneBlock(T0,T,'Помощь на дороге');
+ cap(T0+200,T0+3200,'Помощь на дороге — отдельная кнопка в меню<small>При неполадках автомобиля или в сложной ситуации</small>');
+ tapEl(T0+600,'homeLogo');menuOpen(T0+800);
+ tapEl(T0+2300,'mRoad');cover($('roadScr'),T0+2550);menuClose(T0+2800);
+ cap(T0+3200,T0+8600,'Связаться с дилером или аварийными службами<small>Телефоны помощи на дороге по маркам</small>');
+ scrollY('roadArt',T0+5000,1800,0,140);
+ tap(T0+8600,[28,54+28]);uncover($('roadScr'),T0+8800);
+ cap(T0+8600,T,'Назад — на главный экран');
+ return T;}
+
+/* 10. Автомобили и кнопка звонка */
+
+/* ---------------- номер и название раздела, полоса разделов ---------------- */
+sceneBlock=function(){};
+const SECTIONS=['Консультант','Автомобили','Новости','Поиск','Push-уведомления','Услуги','Сервисная история','Дилеры','Помощь на дороге'];
+document.head.insertAdjacentHTML('beforeend',`<style>
+.secn{position:absolute;left:0;top:190px;font:600 30px var(--cap-head);color:var(--accent);opacity:0;letter-spacing:.02em}
+.secn span{color:#9fb7b9}
+.sect{position:absolute;left:0;top:238px;font:600 46px/1.1 var(--cap-head);color:#14282b;opacity:0}
+.secsub{position:absolute;left:0;top:300px;font:500 24px var(--cap-text);color:#4b6164;opacity:0}
+.segs{position:absolute;left:0;top:150px;display:flex;gap:8px}
+.seg{width:62px;height:7px;border-radius:4px;background:rgba(14,124,134,.16);overflow:hidden}
+.seg i{display:block;height:100%;background:var(--accent);transform-origin:left;transform:scaleX(0)}
+.cap{top:400px!important}
+.prog,.scene{display:none!important}
+</style>`);
+$('caps').insertAdjacentHTML('beforeend',`<div class="segs">${SECTIONS.map((_,i)=>`<div class="seg"><i id="seg${i}"></i></div>`).join('')}</div>`);
+window.CHAPTERS=[];
+function section(i,t0,t1){
+ window.CHAPTERS.push({n:i+1,title:SECTIONS[i],start:t0});
+ const n=document.createElement('div');n.className='secn';n.innerHTML=`${String(i+1).padStart(2,'0')} <span>/ ${String(SECTIONS.length).padStart(2,'0')}</span>`;
+ const h=document.createElement('div');h.className='sect';h.textContent=SECTIONS[i];
+ $('caps').append(n,h);
+ [n,h].forEach(e=>{fadeIn(e,t0,350);fadeOut(e,t1-300,300);});
+ anim('seg'+i,t0,t1-t0,[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],'linear');}
+function subsection(t0,t1,txt){const e=document.createElement('div');e.className='secsub';e.textContent=txt;$('caps').append(e);fadeIn(e,t0,300);fadeOut(e,t1-300,300);}
+
+/* звонок ИИ: таймер с нуля и «дыхание» круга */
+function callTimer(t0,secs){const tm=document.querySelectorAll('#tmr .tm');
+ tm.forEach((e,i)=>setAt(e,t0,{opacity:i?0:1}));
+ for(let i=1;i<=secs&&i<tm.length;i++){setAt(tm[i],t0+i*1000,{opacity:1});setAt(tm[i-1],t0+i*1000,{opacity:0});}}
+function orbTalk(t0,dur){const n=Math.max(2,Math.round(dur/520));const kf=[];for(let k=0;k<=n;k++)kf.push({transform:`scale(${k%2?1.12:0.96})`});kf[n]={transform:'scale(1)'};
+ anim('orb',t0,dur,kf,'ease-in-out');anim('orbR',t0,dur,kf.map(f=>({transform:f.transform.replace(/[\d.]+/,v=>String(+v*1.06))})),'ease-in-out');}
+
+/* 1. Консультант */
+function sceneConsultant(T0){
+ const T=T0+27500;
+ cap(T0+200,T0+3600,'ИИ-консультант — на каждом экране приложения<small>Кнопка «Консультант» всегда в правом нижнем углу</small>');
+ anim('fab',T0+700,1700,[{transform:'scale(1)'},{transform:'scale(1.1)'},{transform:'scale(1)'},{transform:'scale(1.1)'},{transform:'scale(1)'}],'ease-in-out');
+ tap(T0+2600,P('fab'));push($('home'),$('chat'),T0+2850);fadeOut('fab',T0+2850,150);
+ cap(T0+3600,T0+7000,'Чат с консультантом открывается сразу<small>Можно написать или поговорить голосом</small>');
+ tapEl(T0+5600,'voiceBtn');fadeIn('aiCall',T0+5850,350);callTimer(T0+5850,11);
+ cap(T0+7000,T0+17600,'Голосовой разговор с ИИ-консультантом<small>Субтитры показывают, кто что сказал</small>');
+ const sT=[[6200,8800],[8800,14000],[14000,16900]];
+ sT.forEach((x,i)=>{fadeIn('sub'+i,T0+x[0],300);fadeOut('sub'+i,T0+x[1]-250,250);});
+ orbTalk(T0+8800,5200);
+ tapEl(T0+16800,'aiEnd');fadeOut('aiCall',T0+17050,350);fadeOut('chEmpty',T0+17050,1);fadeIn('chMsgs',T0+17150,350);
+ cap(T0+17600,T0+23000,'Разговор сохраняется в чате<small>Можно продолжить письменно</small>');
+ fadeIn('typing',T0+19000,300);
+ cap(T0+23000,T,'Клиент решает вопросы самостоятельно<small>Без участия оператора дилера</small>');
+ tap(T0+25500,[28,54+28]);pop($('chat'),$('home'),T0+25700);fadeIn('fab',T0+26000,200);
+ return T;}
+
+/* 2. Автомобили и кнопка звонка */
+function sceneCars(T0){
+ const T=T0+31500;
+ cap(T0+200,T0+3400,'Витрина автомобилей в наличии<small>Раздел «Автомобили»</small>');
+ tapEl(T0+600,'tabCar');tabTo(3,T0+800);
+ tapEl(T0+2200,'carRow');push($('home'),$('vit'),T0+2450);fabTo(T0+2450,-56);fadeIn('callCell',T0+2600,250);
+ cap(T0+3400,T0+6000,'Новые и с пробегом — в одном каталоге<small>Сортировка по дате и фильтры</small>');
+ tapEl(T0+4200,'vNew');anim('vul',T0+4300,300,[{transform:'translateX(0)',width:'58px'},{transform:'translateX(64px)',width:'82px'}]);
+ fadeOut('gAll',T0+4350,200);fadeIn('gNew',T0+4350,250);fadeIn('cnt142',T0+4350,150);
+ tapEl(T0+5800,'tTorres');push($('vit'),$('carScr'),T0+6050);fadeOut('callCell',T0+6050,150);fabTo(T0+6050,-112);
+ cap(T0+6000,T0+9600,'Карточка автомобиля<small>Цена, VIN, цвет и описание</small>');
+ scrollY('carArt',T0+7300,1800,0,220);
+ cap(T0+9600,T0+15000,'Сравнение автомобилей<small>Добавленные машины сравниваются по характеристикам</small>');
+ tapEl(T0+9900,'cAdd',0,-80);fadeIn('cAdd2',T0+10050,200);
+ tapEl(T0+11300,'cN3');push($('carScr'),$('cmpScr'),T0+11550);fabTo(T0+11550,0);
+ anim('cmpIn',T0+12800,1400,[{transform:'translateX(0)'},{transform:'translateX(-96px)'}],'cubic-bezier(.45,.05,.25,1)');
+ tap(T0+14600,[28,54+28]);pop($('cmpScr'),$('carScr'),T0+14800);fabTo(T0+14800,-112);
+ tap(T0+15600,[28,54+28]);pop($('carScr'),$('vit'),T0+15800);fabTo(T0+15800,-56);fadeIn('callCell',T0+16000,250);
+ cap(T0+16200,T0+20400,'Кнопка звонка настраивается дилером<small>Пример 1: звонок дилеру по сотовой сети</small>');
+ tap(T0+17400,P('callCell'));up($('dial'),T0+17650);
+ tap(T0+19900,[28,54+26]);down($('dial'),T0+20100);
+ cap(T0+20400,T0+28400,'Пример 2: звонок ИИ-консультанту через интернет<small>Та же кнопка, но звонок идёт к консультанту — так решил дилер</small>');
+ fadeOut('callCell',T0+21000,300);fadeIn('callAI',T0+21000,300);
+ tap(T0+22600,P('callAI'));fadeIn('aiCall',T0+22850,350);callTimer(T0+22850,4);orbTalk(T0+23200,3000);
+ tapEl(T0+27000,'aiEnd');fadeOut('aiCall',T0+27250,350);
+ cap(T0+28400,T,'Назад — на главный экран');
+ tap(T0+29000,[28,54+28]);pop($('vit'),$('home'),T0+29200);fabTo(T0+29200,0);fadeOut('callAI',T0+29200,150);
+ return T;}
+
+/* 3. Новости: сначала вкладка «Актуальное» */
+function sceneNews(T0){
+ tapEl(T0+300,'tabFeed');tabTo(0,T0+500);
+ return sceneFeed(T0+1200);}
+
+build=function(){
+ let t=0,s;
+ const run=(i,fn)=>{s=t;t=fn(t);section(i,s,t+GAP/2);t+=GAP;};
+ run(0,sceneConsultant);
+ run(1,sceneCars);
+ run(2,sceneNews);
+ run(3,sceneSearch);
+ run(4,scenePush);
+ /* «Услуги» — три подраздела подряд */
+ s=t;let a=t;t=sceneTO(t);subsection(a,t,'Запись на ТО');t+=GAP;
+ a=t;t=sceneDrive(t);subsection(a,t,'Тест-драйв');t+=GAP;
+ a=t;t=sceneInsCredit(t);subsection(a,t,'Страховка и кредит');section(5,s,t+GAP/2);t+=GAP;
+ run(6,sceneHistory);
+ run(7,sceneDealers);
+ run(8,sceneRoad);
+ window.TOTAL=t;
+};
+
+/* Система Dealer Mobility — новый порядок разделов. Блок 1: Новости, Информация. */
+
+Object.assign(I,{
+ heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+ heartF:'<svg viewBox="0 0 24 24" fill="#e0245e" stroke="#e0245e" stroke-width="1.8" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+ ext:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+ lock:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="11" width="12" height="9" rx="1.5"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+ sendC:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4l2 7 9 1-9 1z"/></svg>'
+});
+document.head.insertAdjacentHTML('beforeend',`<style>
+.sect{font-size:40px!important}
+.dline{display:flex;justify-content:space-between;align-items:center}
+.lk{display:flex;align-items:center;gap:6px;font:400 15px var(--ui);color:#8e8e93;position:relative}
+.lk svg{width:22px;height:22px}.lk .on{position:absolute;right:0;top:0;opacity:0}
+.lk .n1{position:absolute;left:0;opacity:0}
+.src{font:400 13px var(--ui);color:#8e8e93;margin-top:6px}
+.readmore{display:flex;align-items:center;justify-content:center;gap:10px;margin:22px 16px 0;height:50px;border:1.5px solid var(--accent);border-radius:4px;color:var(--accent);font:600 15.5px var(--ui);position:relative}
+.readmore svg{width:20px;height:20px}
+.brw{position:absolute;inset:0;z-index:44;background:#fff;transform:translateY(100%)}
+.brw .bar{height:46px;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid #ddd;background:#f6f6f6;position:relative}
+.brw .bar b{font:600 16px var(--ui);color:#007aff;position:relative}
+.brw .url{flex:1;display:flex;justify-content:center;align-items:center;gap:6px;font:400 15px var(--ui);color:#333;margin-right:40px}.brw .url svg{width:13px;height:13px;color:#666}
+.brw img{width:100%;display:block}
+.share{position:absolute;left:6px;right:6px;bottom:30px;z-index:46;transform:translateY(120%)}
+.share img{width:100%;display:block}
+.share .cancelHit{position:absolute;left:8%;right:8%;bottom:4%;height:12%}
+.cmts{background:#fff;padding:6px 16px 14px}
+.cmt{display:flex;gap:10px;margin-top:12px;opacity:0}
+.cmt .av3{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font:600 14px var(--ui);flex:none}
+.cmt b{display:block;font:600 14px var(--ui)}.cmt span{display:block;font:400 15px/1.35 var(--ui);margin-top:2px}.cmt small{display:block;font:400 12px var(--ui);color:#8e8e93;margin-top:4px}
+.cin{display:flex;align-items:center;gap:10px;margin-top:12px;height:44px;border:1px solid var(--line);border-radius:22px;padding:0 6px 0 16px;font:400 15.5px var(--ui);color:#9a9aa0;position:relative}
+.cin .typed2{position:absolute;left:16px;color:var(--ink)}
+.cin .typed2 span{opacity:0}
+.cin .snd{margin-left:auto;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;position:relative}.cin .snd svg{width:16px;height:16px}
+</style>`);
+
+/* ---- лента: сердечко со счётчиком под датой, статья «За рулём» второй ---- */
+const likeHtml=(id)=>`<span class="lk" id="${id}"><span class="n0">0</span><span class="n1">1</span><span class="h0" data-i="heart"></span><span class="on" data-i="heartF"></span></span>`;
+document.querySelectorAll('#feed .card').forEach((c,i)=>{
+ let d=c.querySelector('.date');
+ if(!d){d=document.createElement('div');d.className='date';c.appendChild(d);d.innerHTML='&nbsp;';}
+ const txt=d.innerHTML;d.className='date dline';d.innerHTML=`<span>${txt}</span>${likeHtml('lkF'+i)}`;});
+$('c-cx5').insertAdjacentHTML('afterend',`<div class="card" id="c-zr"><div class="press" id="p-c-zr"></div>
+ <div class="h" style="margin-top:0">Сезонная смена шин: когда записываться и сколько это будет стоить</div>
+ <img class="wide" src="https://1416363.github.io/DM-demo/img/zr-tires.jpg"><div class="date dline"><span>1 окт. 2026 г.</span>${likeHtml('lkZr')}</div></div>`);
+fill($('feed'));
+
+/* ---- статья «За рулём» внутри приложения ---- */
+screen('zrNews',`${nav('','back',shareBtn)}
+ <div class="body"><div class="art" id="zrArt">
+  <img src="https://1416363.github.io/DM-demo/img/zr-tires.jpg"><div class="in">
+  <h2>Сезонная смена шин: когда записываться и сколько это будет стоить</h2>
+  <div class="dline"><span class="d">1 окт. 2026 г.</span>${likeHtml('lkZrIn')}</div>
+  <div class="src">Источник: «За рулём», zr.ru</div>
+  <p><b>Специалисты советуют ориентироваться на среднесуточную температуру при смене шин</b></p>
+  <p>С наступлением осени перед автомобилистами встает традиционный вопрос – когда менять летние шины на зимние.</p>
+  <p>Главным ориентиром здесь остается устойчивая среднесуточная температура. Записываться в шиномонтаж имеет смысл после того, как она несколько дней подряд держится в диапазоне +5-7 градусов.</p>
+  <p>При таких показателях летняя резина теряет эластичность и хуже ведет себя на холодном мокром асфальте.</p></div>
+  <div class="readmore" id="zrMore"><div class="press" id="p-zrMore"></div>Читать полностью на zr.ru<span data-i="ext"></span></div>
+  <div style="height:200px"></div>
+ </div></div>`);
+vpEl('brw','brw',`<div class="bar"><b id="brDone">Готово</b><div class="url"><span data-i="lock"></span>zr.ru</div></div><img src="https://1416363.github.io/DM-demo/img/zr-article.png">`);
+
+/* ---- новость «Выгодный сервис Mazda»: сердечко, поделиться, комментарии ---- */
+const dEl=document.querySelector('#art .d');
+dEl.outerHTML=`<div class="dline"><span class="d">13 янв. 2026 г.</span>${likeHtml('lkMz')}</div>`;
+document.querySelector('#news .nav span:last-child').id='nShare';
+$('rows').insertAdjacentHTML('afterend',`<div class="grp">КОММЕНТАРИИ</div><div class="cmts" id="cmts">
+ <div class="cmt" id="myCmt"><span class="av3">В</span><div><b>Вы</b><span>Записался на замену масла, спасибо!</span><small>только что</small></div></div>
+ <div class="cin" id="cin"><span class="phc" id="phc">Написать комментарий…</span><span class="typed2" id="typed2"></span><span class="snd" id="cSend" data-i="sendC"></span></div></div>`);
+const cmtText='Записался на замену масла, спасибо!';
+$('typed2').innerHTML=[...cmtText].map((ch,i)=>`<span id="tc${i}">${ch===' '?'&nbsp;':ch}</span>`).join('');
+fill($('news'));
+vpEl('share','share','<img src="https://1416363.github.io/DM-demo/img/share-sheet.png"><span class="cancelHit" id="shCancel"></span>');
+
+function like(id,t){const e=$(id);fadeOut(e.querySelector('.n0'),t,120);fadeIn(e.querySelector('.n1'),t,120);
+ fadeIn(e.querySelector('.on'),t,150);anim(e.querySelector('.on'),t,400,[{transform:'scale(1)'},{transform:'scale(1.35)'},{transform:'scale(1)'}]);}
+
+/* ---------------- Блок 1. Новости, Информация ---------------- */
+function sceneNewsInfo(T0){
+ const feed=$('feed'),art=$('art'),bodyH=844-54-56;
+ let t=T0;
+ cap(t+200,t+4200,'Новости и спецпредложения дилера — в одной ленте<small>Клиент открывает приложение и сразу видит актуальное</small>');
+ const yZr=$('c-zr').offsetTop-8;
+ scrollY(feed,t+1800,1600,0,yZr);
+ /* статья «За рулём» */
+ cap(t+4200,t+9000,'Полезные материалы — тоже в ленте<small>Например, статья журнала «За рулём»</small>');
+ tapEl(t+4700,'c-zr',yZr);push($('home'),$('zrNews'),t+4950);
+ const zrArt=$('zrArt'),yMore=offsetIn($('zrMore'),zrArt)-bodyH+150;
+ scrollY(zrArt,t+6400,2000,0,yMore);
+ cap(t+9000,t+14400,'Статья открывается на сайте источника<small>Кнопка «Читать полностью» ведёт на zr.ru</small>');
+ tapEl(t+9500,'zrMore',yMore);up($('brw'),t+9750);fadeOut('fab',t+9750,150);
+ tap(t+13400,P('brDone'));down($('brw'),t+13600);fadeIn('fab',t+13900,200);
+ tap(t+14500,[28,54+28]);pop($('zrNews'),$('home'),t+14700);
+ /* новость дилера */
+ const yM=$('c-mazda').offsetTop-8;
+ cap(t+14400,t+18600,'Новость дилера открывается целиком<small>Фото, условия и цены акции</small>');
+ scrollY(feed,t+15400,1400,yZr,yM);
+ tapEl(t+17200,'c-mazda',yM);push($('home'),$('news'),t+17450);
+ cap(t+18600,t+23800,'Отметка «нравится» и репост в соцсети<small>Клиент делится новостью дилера с друзьями</small>');
+ tap(t+19600,P($('lkMz').querySelector('.h0')));like('lkMz',t+19700);
+ tap(t+21000,P('nShare'));fadeIn('dim',t+21200,250);anim('share',t+21200,350,[TY('120%'),TY('0')]);
+ tap(t+22900,P('shCancel'));fadeOut('dim',t+23100,250);anim('share',t+23100,300,[TY('0'),TY('120%')]);
+ /* связь с дилером */
+ const yEnd=offsetIn($('rows'),art)-Math.round(bodyH*.5);
+ scrollY(art,t+23800,3600,0,yEnd);
+ cap(t+23800,t+27800,'Связаться с дилером можно прямо из новости<small>Позвонить или заказать обратный звонок</small>');
+ tapEl(t+27600,'rCall',yEnd);up($('dial'),t+27850);
+ cap(t+27800,t+31200,'«Позвонить дилеру» сразу открывает набор номера<small>Номер дилера уже введён — остаётся нажать вызов</small>');
+ tap(t+30600,[28,54+26]);down($('dial'),t+30800);
+ tapEl(t+31500,'rBack',yEnd);dlgOpen('dlgCb',t+31800);
+ cap(t+31200,t+35400,'Или заказать обратный звонок<small>Клиент выбирает, кто ему перезвонит</small>');
+ tapEl(t+33600,'oMaster');dlgClose('dlgCb',t+33950);
+ /* комментарий */
+ const yC=offsetIn($('cmts'),art)-Math.round(bodyH*.45);
+ scrollY(art,t+35400,1200,yEnd,yC);
+ cap(t+35400,t+42000,'Комментарии к новостям<small>Клиент оставляет отзыв прямо под новостью</small>');
+ tap(t+36900,P('cin',yC));fadeOut('phc',t+37100,100);
+ [...cmtText].forEach((_,i)=>fadeIn('tc'+i,t+37300+i*55,40));
+ const tSend=t+37300+cmtText.length*55+500;
+ tap(tSend,P('cSend',yC));fadeOut('typed2',tSend+150,150);fadeIn('phc',tSend+200,150);
+ anim('myCmt',tSend+250,350,[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}]);
+ cap(t+42000,t+45000,'Назад — к ленте новостей');
+ tap(t+43000,[28,54+28]);pop($('news'),$('home'),t+43200);
+ return t+45000;}
+
+
+/* ---------------- Блок 2. Персональные PUSH-уведомления ---------------- */
+screen('crFormP',`${nav('Сведения о кредите','back',okBtn('crOkP'))}
+ <div class="body">
+  <div class="field">Первоначальный взнос (₽)</div>
+  <div class="hint">Первоначальный взнос - это сумма ваших собственных денег, предоставленных для получения кредита.</div>
+  <div class="frow" id="crTermP" style="border-top:1px solid var(--line)"><div class="press" id="p-crTermP"></div><span data-i="cal"></span><span class="ph">Срок кредита <span class="req">*</span></span><span class="val" id="crTermPV">3 года</span></div>
+ </div>`);
+(()=>{const r=$('offRows').nextElementSibling.nextElementSibling;r.id='offCredit';r.insertAdjacentHTML('afterbegin','<div class="press" id="p-offCredit"></div>');r.style.position='relative';})();
+function scenePushB(T0){
+ const t=T0;
+ fadeIn('lock',t,350);
+ cap(t+200,t+3900,'Персональные предложения приходят push-уведомлением<small>Даже когда приложение закрыто</small>');
+ anim('notif',t+900,450,[{opacity:0,transform:'translateY(-30px)'},{opacity:1,transform:'none'}]);
+ tap(t+3400,P('notif'));
+ setAt('offer',t+3600,TX('0'));fadeOut('lock',t+3650,350);
+ cap(t+3900,t+8800,'Нажатие открывает предложение в приложении<small>Фото, условия и сроки акции</small>');
+ const art=$('offArt'),bodyH=844-54-56,yEnd=offsetIn($('offCredit'),art)-Math.round(bodyH*.55);
+ scrollY(art,t+5200,4600,0,yEnd);
+ cap(t+8800,t+11600,'Позвонить, заказать звонок или отправить заявку — прямо из предложения<small>Например, заявку на кредит</small>');
+ tapEl(t+11000,'offCredit',yEnd);push($('offer'),$('crFormP'),t+11250);
+ cap(t+11600,t+16200,'Заявка из уведомления — за несколько касаний<small>Срок кредита и подтверждение галочкой</small>');
+ tapEl(t+12600,'crTermP');dlgOpen('dlgCr',t+12850);
+ tapEl(t+14000,'cr3');dlgClose('dlgCr',t+14300);fadeOut($('crTermP').querySelector('.ph'),t+14300,1);valIn('crTermPV',t+14300);okOn('crOkP',t+14500);
+ tapEl(t+15500,'crOkP');pop($('crFormP'),$('offer'),t+15700);
+ cap(t+16200,t+19000,'Заявка ушла дилеру<small>Назад — в ленту приложения</small>');
+ tap(t+17200,[28,54+28]);pop($('offer'),$('home'),t+17400);
+ return t+19000;}
+
+/* ---------------- Блок 3. Витрина: Автомобили, Товары ---------------- */
+Object.assign(I,{wheel:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3v6.5M12 14.5V21M3.5 9.5l6.1 2M14.4 12.6l6.1 2M6.5 19l3.9-5M13.6 10l3.9-5"/></svg>'});
+document.head.insertAdjacentHTML('beforeend',`<style>
+.gtile img{width:100%;height:147px;object-fit:contain;background:#fff;display:block}
+.gtile .b1{display:block;padding:8px 8px 0;font:400 14px var(--ui);color:var(--accent)}
+.gcard img{width:100%;height:300px;object-fit:contain;display:block;background:#fff}
+.gname{display:flex;justify-content:space-between;align-items:flex-start;padding:16px;border-bottom:1px solid var(--line);background:#fff}
+.gname b{font:400 17px/1.3 var(--ui)}.gname span{font:700 17px var(--ui);white-space:nowrap}
+.gspec{padding:14px 16px;font:400 14.5px/1.5 var(--ui);background:#fff}
+.gnote{padding:0 16px 16px;font:400 11.5px/1.4 var(--ui);color:#8e8e93;background:#fff}
+.glow{position:absolute;inset:-4px;border-radius:7px;border:3px solid #6a4dff;opacity:0;box-shadow:0 0 18px rgba(106,77,255,.6)}
+</style>`);
+$('carRow').insertAdjacentHTML('afterend',`<div class="ir" id="goodsRow" style="background:#fff;border-top:1px solid var(--line);font-size:16.5px"><div class="press" id="p-goodsRow"></div><span data-i="wheel"></span><span style="flex:1">Колёса и диски</span><span style="color:#9a9aa0">236</span></div>`);
+fill($('pCar'));
+const gt=(img,b,m,p,id='')=>`<div class="vt gtile"${id?` id="${id}"`:''}>${id?`<div class="press" id="p-${id}"></div>`:''}<img src="https://1416363.github.io/DM-demo/img/${img}.jpg"><span class="b1">${b}</span><div class="md" style="padding-bottom:0">${m}</div><div class="pr2" style="padding-bottom:10px">${p}</div></div>`;
+screen('goods',`${nav('Колёса и диски')}
+ <div class="body"><div class="vsort"><span data-i="sort"></span>Дата добавления</div>
+  <div class="vcount"><span>236 доступно</span><span data-i="filter"></span></div>
+  <div class="vgrid">${gt('gd-1','Pirelli','SottoZero 3 AO','239 900 ₽','gPir')}${gt('gd-2','Continental','IceContact 2 SUV KD','189 900 ₽')}${gt('gd-3','Pirelli','SottoZero 3 AO','269 900 ₽')}${gt('gd-4','Nokian','Hakkapeliitta 9','239 900 ₽')}</div></div>`);
+screen('gCard',`${nav('','back')}
+ <div class="body" style="background:var(--feed)"><div class="gcard"><img src="https://1416363.github.io/DM-demo/img/gd-card.jpg"></div>
+  <div class="gname"><b>Pirelli<br>SottoZero 3 AO</b><span>239 900 ₽*</span></div>
+  <div class="gspec">8J × 18, ET 26<br>225/55 R18 102V XL</div>
+  <div class="gnote">* Указана ориентировочная розничная цена в рублях (с НДС) за комплект из четырех колес. Уточняйте стоимость у официальных дилеров Audi. Количество ограничено. Наличие оригинальных аксессуаров уточняйте у дилеров.</div></div>
+ <div class="bbtn">СВЯЗАТЬСЯ С ДИЛЕРОМ</div>`);
+document.querySelector('#carScr .cbtn').style.position='relative';
+document.querySelector('#carScr .cbtn').insertAdjacentHTML('beforeend','<i class="glow" id="cbGlow"></i>');
+
+function sceneShowcase(T0){
+ const t=T0;
+ cap(t+200,t+3600,'Витрина: автомобили и товары дилера<small>Разделы витрины настраивает дилер</small>');
+ tapEl(t+700,'tabCar');tabTo(3,t+900);
+ /* товары */
+ tapEl(t+2600,'goodsRow');push($('home'),$('goods'),t+2850);
+ cap(t+3600,t+7600,'Каталог товаров<small>Фото, наименование и цена</small>');
+ tapEl(t+5600,'gPir');push($('goods'),$('gCard'),t+5850);fabTo(t+5850,-56);
+ cap(t+7600,t+10800,'Карточка товара<small>Описание и связь с дилером</small>');
+ tap(t+10000,[28,54+28]);pop($('gCard'),$('goods'),t+10200);fabTo(t+10200,0);
+ tap(t+10800,[28,54+28]);pop($('goods'),$('home'),t+11000);
+ /* автомобили */
+ const a=t+11600;
+ cap(a,a+3200,'Автомобили в наличии<small>Новые и с пробегом — в одном каталоге</small>');
+ tapEl(a+300,'carRow');push($('home'),$('vit'),a+550);fabTo(a+550,-56);fadeIn('callCell',a+700,250);
+ tapEl(a+1900,'vNew');anim('vul',a+2000,300,[{transform:'translateX(0)',width:'58px'},{transform:'translateX(64px)',width:'82px'}]);
+ fadeOut('gAll',a+2050,200);fadeIn('gNew',a+2050,250);fadeIn('cnt142',a+2050,150);
+ tapEl(a+3200,'tTorres');push($('vit'),$('carScr'),a+3450);fadeOut('callCell',a+3450,150);fabTo(a+3450,-112);
+ cap(a+3200,a+6600,'Карточка автомобиля<small>Цена, VIN, цвет и описание</small>');
+ scrollY('carArt',a+4300,1800,0,220);
+ cap(a+6600,a+9800,'Заявка на покупку — кнопка «Связаться с дилером»');
+ anim('cbGlow',a+6800,2400,[{opacity:0},{opacity:1},{opacity:.3},{opacity:1},{opacity:0}],'ease-in-out');
+ cap(a+9800,a+15000,'Сравнение автомобилей<small>Добавленные машины сравниваются по характеристикам</small>');
+ tapEl(a+10100,'cAdd',0,-80);fadeIn('cAdd2',a+10250,200);
+ tapEl(a+11500,'cN3');push($('carScr'),$('cmpScr'),a+11750);fabTo(a+11750,0);
+ anim('cmpIn',a+12800,1400,[{transform:'translateX(0)'},{transform:'translateX(-96px)'}],'cubic-bezier(.45,.05,.25,1)');
+ tap(a+14600,[28,54+28]);pop($('cmpScr'),$('carScr'),a+14800);fabTo(a+14800,-112);
+ tap(a+15600,[28,54+28]);pop($('carScr'),$('vit'),a+15800);fabTo(a+15800,-56);fadeIn('callCell',a+16000,250);
+ /* кнопка звонка: два примера */
+ cap(a+16200,a+20400,'Кнопка звонка настраивается дилером<small>Пример 1: звонок дилеру по сотовой сети</small>');
+ tap(a+17400,P('callCell'));up($('dial'),a+17650);
+ tap(a+19900,[28,54+26]);down($('dial'),a+20100);
+ cap(a+20400,a+27400,'Пример 2: звонок ИИ-консультанту через интернет<small>Та же кнопка, но звонок идёт к консультанту — так решил дилер</small>');
+ fadeOut('callCell',a+21000,300);fadeIn('callAI',a+21000,300);
+ tap(a+22600,P('callAI'));fadeIn('aiCall',a+22850,350);callTimer(a+22850,3);orbTalk(a+23200,2600);
+ tapEl(a+26200,'aiEnd');fadeOut('aiCall',a+26450,350);
+ cap(a+27400,a+30000,'Назад — на главный экран');
+ tap(a+28000,[28,54+28]);pop($('vit'),$('home'),a+28200);fabTo(a+28200,0);fadeOut('callAI',a+28200,150);
+ return a+30000;}
+
+/* ---------------- Блок 4. Сервисная история + бонусная карта ---------------- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.bq{background:#fff;text-align:center;padding:22px 0 16px;border-bottom:1px solid var(--line)}.bq img{width:190px;height:190px;object-fit:contain}
+.bk{background:#fff;padding:12px 16px;border-bottom:1px solid var(--line);position:relative}.bk small{display:block;font:400 12.5px var(--ui);color:#8e8e93}.bk b{display:block;font:600 18px var(--ui);margin-top:6px;font-variant-numeric:tabular-nums}
+.bk .inf{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--accent)}.bk .inf svg{width:24px;height:24px}
+.bh{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px 16px;border-bottom:1px solid #eee}
+.bh b{display:block;font:400 16px var(--ui)}.bh small{display:block;font:400 12.5px var(--ui);color:#8e8e93;margin-top:3px}
+.bh .plus2{color:#46b54a;font:500 16px var(--ui)}.bh .minus{font:600 16px var(--ui)}
+</style>`);
+(()=>{const rows=document.querySelectorAll('#menu .mr');rows[3].id='mBonus';rows[3].style.position='relative';rows[3].insertAdjacentHTML('afterbegin','<div class="press" id="p-mBonus"></div>');})();
+screen('bonus',`${nav('Бонусная карта','back','<span data-i="dots"></span>')}
+ <div class="body" style="background:var(--feed)">
+  <div class="bq"><img src="https://1416363.github.io/DM-demo/img/bonus-qr.png"></div>
+  <div class="bk"><small>Ваши баллы</small><b>356 771,00</b></div>
+  <div class="bk"><small>Платиновая карта</small><b>2032 8927 5283 6822 8620 32</b><span class="inf" data-i="info"></span></div>
+  <div class="grp">ИСТОРИЯ</div>
+  <div class="bh"><div><b>Начислены баллы</b><small>21 апр. 2019</small></div><span class="plus2">+ 3 балла</span></div>
+  <div class="bh"><div><b>Ремонт двигателя</b><small>10 апр. 2019</small></div><span class="minus">- 182 балла</span></div>
+ </div>`);
+function sceneHistoryB(T0){
+ sceneHistory(T0);
+ /* убрать паузу в конце сервисной истории: последняя подпись короче, карта лояльности раньше */
+ const caps=document.querySelectorAll('#caps .cap'),last=caps[caps.length-1];
+ last.getAnimations().forEach(a=>a.cancel());last.remove();
+ let t=T0+13200;
+ cap(t,t+3000,'Программа лояльности<small>Бонусная карта — в боковом меню</small>');
+ tapEl(t+400,'homeLogo');menuOpen(t+600);
+ tapEl(t+2000,'mBonus');cover($('bonus'),t+2250);menuClose(t+2500);
+ cap(t+3000,t+7600,'Бонусная карта клиента<small>QR-код, баллы и история их начисления и списания</small>');
+ tap(t+7600,[28,54+28]);uncover($('bonus'),t+7800);
+ cap(t+7600,t+9000,'Назад — на главный экран');
+ return t+9000;}
+
+/* ---------------- Блок 5. Услуги, Запись: заявка на ремонт ---------------- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.ms{display:flex;align-items:center;gap:14px;padding:12px 16px;position:relative}
+.ms img,.ms .av4{width:40px;height:40px;border-radius:50%;object-fit:cover;flex:none}
+.ms .av4{background:#e4e4e8;display:grid;place-items:center;color:#a8a8ae}.ms .av4 svg{width:24px;height:24px}
+.ms b{display:block;font:400 16px var(--ui)}.ms small{display:flex;align-items:center;gap:8px;font:400 12.5px var(--ui);color:#8e8e93;margin-top:2px}
+.ms .st3{display:flex;color:#f5b800}.ms .st3 svg{width:13px;height:13px}
+.skip{font:600 14px var(--ui);color:var(--accent);letter-spacing:.03em}
+</style>`);
+{const _t=tabTo;tabTo=function(i,t){if(i===tab4)return;_t(i,t);};}
+const msList=[['emp-mitchenkov','Митченков Сергей'],[null,'Тишининов Евгений'],['emp-burenkov','Буренков Максим'],['emp-illarionshin','Илларионшин Сергей']];
+screen('masters',`${nav('Выберите мастера','back','<span class="skip">ПРОПУСТИТЬ</span>')}
+ <div class="body">${msList.map((m,i)=>`<div class="ms" id="ms${i}"><div class="press" id="p-ms${i}"></div>${m[0]?`<img src="https://1416363.github.io/DM-demo/img/${m[0]}.jpg">`:'<span class="av4" data-i="person"></span>'}<div><b>${m[1]}</b><small>Мастер-консультант<span class="st3">${'<span data-i="starF"></span>'.repeat(5)}</span></small></div></div>`).join('')}</div>`);
+document.querySelectorAll('#tabs + .panels #pSvc .srow')[0].insertAdjacentHTML('afterbegin','<div class="press" id="p-sRepair"></div>');
+screen('repForm',`${nav('Подробнее о сервисе','back',okBtn('repOk'))}
+ <div class="body">
+  <div class="frow"><img class="car" src="https://1416363.github.io/DM-demo/img/car-torres-icon.jpg"><div class="two">KGM Torres<small>2024</small></div></div>
+  <div class="frow" id="repDate"><div class="press" id="p-repDate"></div><span data-i="cal"></span><span class="ph">Дата и время <span class="req">*</span></span><span class="val" id="repDateV">24 февр. 2026 г, 18:30</span></div>
+  <div class="frow" id="repType"><div class="press" id="p-repType"></div><span data-i="sTO" style="color:#8e8e93"></span><span class="ph">Тип ремонта <span class="req">*</span></span><span class="val" id="repTypeV">Слесарный ремонт</span></div>
+  <div class="frow"><span data-i="pen" style="color:#8e8e93"></span><span class="ph">Добавьте описание… <span class="req">*</span></span></div>
+  <div class="frow"><span data-i="clip"></span><span class="ph">Прикрепить файлы (осталось 10)</span></div>
+ </div>`);
+const slotsR=['14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
+screen('calR',`<div class="nav"><span data-i="close"></span><div class="tt">Дата и время</div></div>
+ <div class="body" style="top:56px">
+  <div class="cal"><div class="m">Февраль</div>
+   <div class="wk"><span>СБ</span><span>ВС</span><span>ПН</span><span>ВТ</span><span>СР</span><span>ЧТ</span><span>ПТ</span><span>СБ</span></div>
+   <div class="dd">${days.map(d=>`<div><i class="sel" style="opacity:${d===24?1:0}"></i><span>${d}</span><b class="wt" style="opacity:${d===24?1:0}">${d}</b></div>`).join('')}</div></div>
+  <div class="calbody" style="top:114px"><div class="slots" style="opacity:1">${slotsR.map(s=>`<div class="slot" id="rs${s.replace(':','')}">${s}<span class="on" id="ron${s.replace(':','')}" style="line-height:33px">${s}</span></div>`).join('')}</div></div>
+ </div>`);
+vpEl('dlg','dlgRep',`<div class="dt">Выбрать тип ремонта</div><div class="op" id="rSles"><div class="press" id="p-rSles"></div>Слесарный ремонт</div><div class="op">Кузовной ремонт</div><div class="cn">CANCEL</div>`,'top:230px');
+fill(document);
+
+function sceneRepair(T0){
+ const t=T0;
+ cap(t+200,t+3400,'Раздел «Услуги» — все сервисы дилера<small>Ремонт, ТО, тест-драйв, страховка, кредит и другие</small>');
+ tapEl(t+700,'tabSvc');tabTo(1,t+900);
+ tapEl(t+2400,'sRepair');push($('home'),$('masters'),t+2650);
+ cap(t+3400,t+6000,'Заявка на ремонт: сначала мастер-консультант<small>С оценками клиентов</small>');
+ tapEl(t+4600,'ms0');push($('masters'),$('repForm'),t+4850);
+ cap(t+6000,t+9600,'Дата и время визита<small>Свободное время видно сразу</small>');
+ tapEl(t+6600,'repDate');up($('calR'),t+6850);
+ tapEl(t+8400,'rs1830');fadeIn('ron1830',t+8500,120);
+ down($('calR'),t+8900);fadeOut($('repDate').querySelector('.ph'),t+8900,1);valIn('repDateV',t+8900);
+ cap(t+9600,t+13000,'Тип ремонта — слесарный или кузовной');
+ tapEl(t+10000,'repType');dlgOpen('dlgRep',t+10250);
+ tapEl(t+11400,'rSles');dlgClose('dlgRep',t+11700);fadeOut($('repType').querySelector('.ph'),t+11700,1);valIn('repTypeV',t+11700);
+ tap(t+12600,[28,54+28]);pop($('repForm'),$('masters'),t+12800);
+ tap(t+13300,[28,54+28]);pop($('masters'),$('home'),t+13500);
+ return t+14000;}
+
+function sceneServices(T0){
+ let t=T0,a;
+ a=t;t=sceneRepair(t);subsection(a,t,'Ремонт');t+=GAP;
+ a=t;t=sceneTO(t);subsection(a,t,'Запись на ТО');t+=GAP;
+ a=t;t=sceneDrive(t);subsection(a,t,'Тест-драйв');t+=GAP;
+ a=t;t=sceneInsCredit(t);subsection(a,t,'Страховка и кредит');
+ return t;}
+
+
+/* ---------------- Блок 7. Поиск по приложению ---------------- */
+function sceneSearchB(T0){tapEl(T0+300,'tabFeed');tabTo(0,T0+500);return sceneSearch(T0+1200);}
+
+
+/* ---------------- Блок 8. Адреса дилерских центров ---------------- */
+Object.assign(I,{wa:'<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#25d366"/><path d="M12 6.2a5.8 5.8 0 0 0-5 8.7l-.8 2.9 3-.8A5.8 5.8 0 1 0 12 6.2z" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
+ navArrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11l16-7-7 16-2-7z"/></svg>',
+ userPlus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="8" r="4"/><path d="M3 20c0-3.5 3-6 7-6s7 2.5 7 6M19 8v6M16 11h6"/></svg>',
+ mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>'});
+document.head.insertAdjacentHTML('beforeend',`<style>
+.mapw{position:absolute;left:0;right:0;top:56px;height:394px;overflow:hidden;background:#eee}
+.mapw img{width:100%;display:block}
+.route{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.route path{fill:none;stroke:#0e7c86;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.me2{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#2b7cff;border:3px solid #fff;box-shadow:0 0 0 6px rgba(43,124,255,.25);opacity:0}
+.locb{position:absolute;right:14px;bottom:14px;width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);display:grid;place-items:center}.locb svg{width:22px;height:22px}
+.mcard{position:absolute;left:0;right:0;top:450px;bottom:0;background:#fff;padding:12px 16px}
+.mcard .r1{display:flex;justify-content:space-between;align-items:center}.mcard .r1 img{height:16px}
+.mcard .dn3{font:500 18px var(--ui);margin-top:8px}
+.mcard .op2{display:flex;align-items:center;gap:8px;margin-top:10px;font:400 14px var(--ui);color:var(--accent)}.mcard .op2 svg{width:18px;height:18px}
+.mcard .loc{margin-top:12px;font:400 15px var(--ui)}.mcard .loc small{display:flex;gap:8px;margin-top:6px;font:400 14px/1.35 var(--ui);color:var(--text)}
+.mcard .btns{display:flex;gap:12px;margin-top:14px}.mcard .btns>div{flex:1;height:44px;border-radius:5px;display:grid;place-items:center;font:500 15px var(--ui);position:relative}
+.rbtn{background:var(--accent);color:#fff}.rbtn2{border:1.5px solid var(--accent);color:var(--accent)}
+.pb{display:flex;align-items:center;gap:14px;padding:11px 16px;border-bottom:1px solid #f0f0f2;position:relative}
+.pb img,.pb .av4{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:none}.pb .av4{background:#e4e4e8;display:grid;place-items:center;color:#a8a8ae}.pb .av4 svg{width:24px;height:24px}
+.pb b{display:block;font:400 16px var(--ui)}.pb small{display:flex;align-items:center;gap:6px;font:400 12.5px var(--ui);color:#8e8e93;margin-top:2px}
+.pb .st3{display:flex;color:#f5b800}.pb .st3 svg{width:13px;height:13px}.pb .st3 .no{color:#dcdce0}
+.pb .chv{margin-left:auto;color:#8e8e93}.pb .chv svg{width:18px;height:18px}
+.ecard{text-align:center;padding:26px 16px 22px;border-bottom:1px solid var(--line)}
+.ecard img{width:96px;height:96px;border-radius:50%;object-fit:cover}.ecard b{display:block;font:500 18px var(--ui);margin-top:16px}.ecard small{display:block;font:400 14px var(--ui);color:#8e8e93;margin-top:8px}
+.ecard .st4{display:flex;justify-content:center;gap:4px;margin-top:12px;color:#f5b800;position:relative}.ecard .st4 svg{width:26px;height:26px}
+.ecard .st4 .no{color:#dcdce0}.ecard .st4 .add{position:absolute;inset:0;display:flex;justify-content:center;gap:4px}
+.eacts{display:flex;justify-content:space-around;padding:16px 0;border-bottom:1px solid var(--line)}
+.eacts div{text-align:center;font:600 12.5px var(--ui);letter-spacing:.03em;color:var(--ink)}.eacts svg{width:26px;height:26px;display:block;margin:0 auto 6px}
+.rate{font:400 15px var(--ui);color:var(--accent);position:relative}
+.favon{position:absolute;opacity:0;color:#f5b800}
+</style>`);
+/* карточка автоцентра: id у адреса, избранное, WhatsApp, «Показать списком» */
+(()=>{const irs=document.querySelectorAll('#dcArt .ir');irs[1].id='dcAddr';irs[1].insertAdjacentHTML('afterbegin','<div class="press" id="p-dcAddr"></div>');
+ irs[6].insertAdjacentHTML('afterend','<div class="ir a"><span data-i="wa" style="color:inherit"></span>WhatsApp</div>');
+ const st=document.querySelector('#dCard .nav span:nth-of-type(2)');st.id='dcFav';st.style.position='relative';st.insertAdjacentHTML('beforeend','<span class="favon" id="dcFavOn" data-i="starF" style="left:0;top:0"></span>');
+ const g=[...document.querySelectorAll('#dcArt .grp2')][1];const b=g.querySelector('b');b.id='dcList';b.style.position='relative';
+ fill($('dCard'));})();
+screen('mapScr',`${nav('Дилеры на карте')}
+ <div class="mapw"><img src="https://1416363.github.io/DM-demo/img/map-p10.png">
+  <svg class="route" viewBox="0 0 390 394"><path id="rPath" d="M28 394 L62 300 L120 302 L176 296" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1"/></svg>
+  <span class="me2" id="meDot" style="left:28px;top:384px"></span></div>
+ <div class="mcard"><div class="r1"><span></span><span class="dist" style="position:static;background:#e0245e">1 495,8 км</span></div>
+  <div class="dn3">МегаДилер Краснодар</div>
+  <div class="op2"><span data-i="clock"></span>Открыто (Закроется через 4ч 29мин)<span data-i="star" style="margin-left:auto;color:#8e8e93"></span></div>
+  <div class="loc">Местоположение дилера:<small><span data-i="pin" style="color:#e0245e;width:18px;flex:none"></span>ул. Аэропортовская, 4 корпус 1, Краснодар, Краснодарский край, Россия, 350912</small></div>
+  <div class="btns"><div class="rbtn" id="rRoute"><div class="press" id="p-rRoute"></div>Проложить маршрут</div><div class="rbtn2">-</div></div></div>`);
+const pbList=[['emp-mitchenkov','Митченков Сергей','Мастер-консультант',5],[null,'Тишининов Евгений','Мастер-консультант',5],['emp-burenkov','Буренков Максим','Мастер-консультант',5],['emp-illarionshin','Илларионшин Сергей','Мастер-консультант',2],['emp-korovina','Коровина Олеся','специалист по страхованию',0]];
+const st3=n=>n?`<span class="st3">${[1,2,3,4,5].map(k=>`<span class="${k<=n?'':'no'}" data-i="starF"></span>`).join('')}</span>`:'';
+screen('pbook',`${nav('Телефонная книга','back','<span data-i="search"></span>','МегаДилер KIA на Калужской')}
+ <div class="body"><div class="grp">МАСТЕРА-КОНСУЛЬТАНТЫ</div>${pbList.map((e,i)=>`<div class="pb" id="pb${i}"><div class="press" id="p-pb${i}"></div>${e[0]?`<img src="https://1416363.github.io/DM-demo/img/${e[0]}.jpg">`:'<span class="av4" data-i="person"></span>'}<div><b>${e[1]}</b><small>${e[2]}${e[3]?' ·':''}${st3(e[3])}</small></div><span class="chv" data-i="chev"></span></div>`).join('')}</div>`);
+screen('empCard',`<div class="nav"><span data-i="back"></span><div class="tt"></div><span class="rate" id="eRate"><div class="press" id="p-eRate"></div>Оценить</span><span data-i="userPlus"></span></div>
+ <div class="body"><div class="ecard"><img src="https://1416363.github.io/DM-demo/img/emp-mitchenkov.jpg"><b>Митченков Сергей</b><small>Мастер-консультант</small>
+  <div class="st4"><span class="no" data-i="starF"></span><span class="no" data-i="starF"></span><span class="no" data-i="starF"></span><span class="no" data-i="starF"></span><span class="no" data-i="starF"></span>
+   <div class="add">${[0,1,2,3,4].map(k=>`<span id="es${k}" style="opacity:0" data-i="starF"></span>`).join('')}</div></div></div>
+  <div class="eacts"><div><span data-i="phone"></span>ЗВОНОК ДИЛЕРУ</div><div><span data-i="mail"></span>НАПИСАТЬ</div></div></div>`);
+fill(document);
+
+function sceneDealersB(T0){
+ const t=T0,art=$('dcArt');
+ cap(t+200,t+4200,'Все автоцентры дилера в одном списке<small>Расстояние, часы работы, избранное</small>');
+ tapEl(t+600,'tabDl');tabTo(2,t+800);
+ scrollY('dlList',t+2000,1600,0,300);
+ tapEl(t+4000,'dl4',300);push($('home'),$('dCard'),t+4250);
+ cap(t+4200,t+8200,'Карточка автоцентра<small>Адрес, сайт и все способы связи: звонок, обратный звонок, чат, заявка, WhatsApp</small>');
+ tapEl(t+6200,'dcFav');fadeIn('dcFavOn',t+6300,200);
+ cap(t+8200,t+12400,'Местоположение и маршрут до автоцентра<small>Адрес открывает карту дилеров</small>');
+ tapEl(t+8800,'dcAddr');push($('dCard'),$('mapScr'),t+9050);fadeOut('fab',t+9050,150);
+ tapEl(t+10600,'rRoute');fadeIn('meDot',t+10800,200);anim('rPath',t+10900,1300,[{strokeDashoffset:1},{strokeDashoffset:0}],'ease-in-out');
+ tap(t+12600,[28,54+28]);pop($('mapScr'),$('dCard'),t+12800);fadeIn('fab',t+13000,200);
+ const ySo=offsetIn($('dcSo'),art);
+ cap(t+12400,t+16800,'Спецпредложения и сотрудники автоцентра<small>Мастера-консультанты с оценками клиентов</small>');
+ scrollY(art,t+13200,1800,0,ySo-20);
+ const yL=ySo-20;
+ tap(t+16000,P('dcList',yL));push($('dCard'),$('pbook'),t+16250);
+ cap(t+16800,t+20400,'Телефонная книга — нужное контактное лицо<small>Позвонить или написать выбранному сотруднику</small>');
+ tapEl(t+18000,'pb0');push($('pbook'),$('empCard'),t+18250);
+ cap(t+20400,t+24400,'Оценка работы мастера-консультанта');
+ tapEl(t+20800,'eRate');
+ [0,1,2,3,4].forEach(k=>fadeIn('es'+k,t+21300+k*180,150));
+ tap(t+23200,[28,54+28]);pop($('empCard'),$('pbook'),t+23400);
+ tap(t+24000,[28,54+28]);pop($('pbook'),$('dCard'),t+24200);
+ cap(t+24400,t+29000,'Чат с дилером — прямо из карточки<small>Оперативная поддержка сотрудника автоцентра</small>');
+ scrollY(art,t+24500,800,yL,0);
+ tapEl(t+25800,'dcChat');push($('dCard'),$('dChat'),t+26050);fadeOut('fab',t+26050,200);
+ tap(t+28400,[28,54+28]);pop($('dChat'),$('dCard'),t+28600);fadeIn('fab',t+28800,200);
+ cap(t+29000,t+31000,'Назад — к списку автоцентров');
+ tap(t+29600,[28,54+28]);pop($('dCard'),$('home'),t+29800);
+ return t+31000;}
+
+/* ---------------- сборка ---------------- */
+const SECTIONS2=['Новости, Информация','Персональные PUSH-уведомления','Витрина: Автомобили, Товары','Сервисная история','Услуги, Запись','ИИ-Консультант','Поиск по приложению','Адреса дилерских центров','Помощь на дороге'];
+SECTIONS.splice(0,SECTIONS.length,...SECTIONS2);
+build=function(){
+ let t=0,s;
+ const run=(i,fn)=>{s=t;t=fn(t);section(i,s,t+GAP/2);t+=GAP;};
+ run(0,sceneNewsInfo);
+ run(1,scenePushB);
+ run(2,sceneShowcase);
+ run(3,sceneHistoryB);
+ run(4,sceneServices);
+ run(5,sceneConsultant);
+ run(6,sceneSearchB);
+ run(7,sceneDealersB);
+ run(8,sceneRoad);
+ window.TOTAL=t;
+};
+
+
+
+
+/* Живое воспроизведение сцены на странице: пуск/пауза, переход к разделу, масштаб по ширине */
+(function(){
+ const view=document.getElementById('view'),stage=view.querySelector('.stage'),list=document.getElementById('list');
+ const fit=()=>{stage.style.transform=`scale(${view.clientWidth/1920})`;};
+ new ResizeObserver(fit).observe(view);fit();
+ const IC={play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
+  pause:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></svg>',
+  again:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5"/></svg>'};
+ function start(){
+  const caps=document.getElementById('caps');
+  caps.insertAdjacentHTML('beforeend','<button class="playb" id="playb" type="button"><i></i><span></span></button>');
+  const btn=document.getElementById('playb');
+  const anims=document.getElementById('dm-root').getAnimations({subtree:true}),TOTAL=window.TOTAL,CH=window.CHAPTERS||[];
+  let t=1000,playing=false,last=0,raf=0;
+  const fmt=ms=>{const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
+  list.innerHTML=CH.map((c,i)=>`<li><button type="button" data-t="${c.start}"><span class="n">${String(c.n).padStart(2,'0')}</span><span>${c.title}</span><span class="t">${fmt(c.start)}</span></button></li>`).join('');
+  const items=[...list.querySelectorAll('button')];
+  const draw=()=>{anims.forEach(a=>{a.currentTime=t;});
+   let k=0;CH.forEach((c,i)=>{if(t>=c.start)k=i;});items.forEach((b,i)=>b.classList.toggle('on',i===k));};
+  const ui=()=>{const end=t>=TOTAL;btn.firstChild.innerHTML=playing?IC.pause:(end?IC.again:IC.play);
+   btn.lastChild.textContent=playing?'Пауза':(end?'Смотреть снова':'Смотреть');btn.setAttribute('aria-label',btn.lastChild.textContent);};
+  const tick=now=>{if(!playing)return;t+=Math.min(now-last,100);last=now;
+   if(t>=TOTAL){t=TOTAL;playing=false;}draw();ui();if(playing)raf=requestAnimationFrame(tick);};
+  const play=()=>{if(t>=TOTAL)t=0;playing=true;last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);ui();};
+  const pause=()=>{playing=false;cancelAnimationFrame(raf);ui();};
+  btn.addEventListener('click',()=>playing?pause():play());
+  list.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;t=+b.dataset.t;draw();play();});
+  draw();ui();
+ }
+ const wait=()=>window.READY?start():setTimeout(wait,50);wait();
+})();
+
+</script>
+</body></html>
