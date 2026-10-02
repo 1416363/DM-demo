@@ -223,6 +223,9 @@
 .tip b{font-weight:600}.tip span{display:block;color:#b9d3d5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl:hover .tip{opacity:1}
 .tlt{font:500 14px var(--cap-text);color:#5d7275;font-variant-numeric:tabular-nums;white-space:nowrap}
+.callout{position:absolute;z-index:96;opacity:0;pointer-events:none;white-space:nowrap;background:#14282b;color:#fff;font:600 17px 'Inter',Arial,sans-serif;padding:9px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.callout:after{content:"";position:absolute;bottom:-7px;width:14px;height:14px;background:#14282b;transform:rotate(45deg)}
+.callout.r:after{left:8px}.callout.l:after{right:8px}
 .playb{position:absolute;left:0;top:880px;display:flex;align-items:center;gap:22px;border:0;background:none;padding:0;cursor:pointer;font:500 30px var(--cap-text);color:var(--accent)}
 .playb i{width:104px;height:104px;border-radius:50%;background:rgba(255,255,255,.55);border:3px solid rgba(14,124,134,.55);display:grid;place-items:center;transition:background .2s,border-color .2s}
 .playb:hover i{background:rgba(14,124,134,.08);border-color:var(--accent)}
@@ -485,12 +488,41 @@ const E='cubic-bezier(.4,0,.2,1)';
 function anim(el,t0,dur,kf,ease=E){if(typeof el==='string')el=$(el);el.animate(kf,{delay:Math.max(0,t0),duration:Math.max(1,dur),fill:'forwards',easing:ease});}
 const setAt=(el,t,props)=>anim(el,t,1,[props,props],'linear');
 /* центр элемента в координатах телефона; scroll — сдвиг прокрутки его контейнера */
-function P(el,scroll=0){if(typeof el==='string')el=$(el);let x=el.offsetWidth/2,y=el.offsetHeight/2,e=el;
+function P(el,scroll=0){if(typeof el==='string')el=$(el);window._lastEl=el;let x=el.offsetWidth/2,y=el.offsetHeight/2,e=el;
  while(e&&e.dataset.root===undefined){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent;}
  return [x,y+(+e.dataset.root)-scroll];}
-function tap(t0,xy){const [x,y]=xy,e=$('tap');
+/* нажатие: кольцо в точке касания, выноска с названием нажатого, затем пауза перед переходом */
+window.TAPS=[];
+const LBL={icSearch:'Поиск',homeLogo:'Меню',nShare:'Поделиться',cSend:'Отправить',cin:'Написать комментарий',voiceBtn:'Голосовой разговор',aiEnd:'Завершить',
+ toOk:'Готово',insOk:'Готово',crOk:'Готово',crOkP:'Готово',repOk:'Готово',brDone:'Готово',shCancel:'Отмена',fab:'Консультант',callCell:'Звонок дилеру',
+ callAI:'Звонок ИИ-консультанту',notif:'Уведомление',dcFav:'В избранное',dcList:'Показать списком',eRate:'Оценить',mCar:'Автомобиль клиента',
+ mBonus:'Мои бонусы',mRoad:'Помощь на дороге',cAdd:'Добавить к сравнению',cN3:'Сравнение автомобилей',lkMz:'Нравится',rRoute:'Проложить маршрут',
+ dcAddr:'Адрес автоцентра',dcChat:'Чат',zrMore:'Читать полностью',day27:'27 февраля',slot1630:'16:30',rs1830:'18:30',goodsRow:'Колёса и диски',
+ carRow:'Автомобили',gPir:'Pirelli SottoZero 3 AO',tTorres:'KGM Torres',bMazdaA:'Mazda',bBaicB:'BAIC',vNew:'Новые',tabFeed:'Актуальное',
+ tabSvc:'Услуги',tabDl:'Дилеры',tabCar:'Автомобили'};
+function tapLabel(el){if(!el)return '';const h=el.closest('[id]');if(h&&LBL[h.id])return LBL[h.id];
+ const c=el.querySelector&&el.querySelector('.h,.nm,.n,.ph,b');let t=(c?c.textContent:el.textContent)||'';
+ t=t.replace(/\*/g,'').replace(/\s+/g,' ').trim();return t.length>28?t.slice(0,27)+'…':t;}
+function tap(t0,xy){const [x,y]=xy,e=$('tap'),el=window._lastEl;window._lastEl=null;
+ const key=el&&el.id&&el.id.indexOf('key-')===0;
+ let lbl=key?'':tapLabel(el);if(!el&&x<=40&&y<=95)lbl='Назад';
+ if(!key)window.TAPS.push(t0);
  setAt(e,t0,{left:x+'px',top:y+'px'});
- anim(e,t0,520,[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)',offset:.35},{opacity:0,transform:'scale(1.5)'}],'ease-out');}
+ anim(e,t0,520,key?[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)',offset:.35},{opacity:0,transform:'scale(1.5)'}]:
+  [{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)',offset:.15},{opacity:1,transform:'scale(1.05)',offset:.8},{opacity:0,transform:'scale(1.4)'}],'ease-out');
+ if(lbl){const c=document.createElement('div');c.className='callout';c.textContent=lbl;const right=x<200;
+  c.style.left=x+'px';c.style.top=(y-52)+'px';c.style.transform=right?'translateX(-14px)':'translateX(calc(-100% + 14px))';c.classList.add(right?'r':'l');
+  $('phone').parentElement.appendChild(c);
+  anim(c,t0,520,[{opacity:0},{opacity:1,offset:.18},{opacity:1,offset:.82},{opacity:0}],'linear');}}
+/* растянуть время: после каждого нажатия — пауза HOLD мс до перехода */
+const HOLD=900;
+function dmWarp(){const T=window.TAPS.slice().sort((a,b)=>a-b);
+ const W=x=>{let n=0;for(const v of T){if(v<x)n++;else break;}return x+n*HOLD;};
+ document.getElementById('dm-root').getAnimations({subtree:true}).forEach(a=>{const tm=a.effect.getTiming(),d=tm.delay||0,u=tm.duration||0;
+  const nd=W(d),ne=W(d+u);a.effect.updateTiming({delay:nd,duration:Math.max(1,ne-nd)});});
+ (window.CHAPTERS||[]).forEach(c=>{c.start=W(c.start);});
+ (window.CAPS||[]).forEach(c=>{c.t0=W(c.t0);c.t1=W(c.t1);});
+ window.TOTAL=W(window.TOTAL);}
 function press(el,t0){anim(el,t0,420,[{opacity:0},{opacity:1,offset:.3},{opacity:0}]);}
 function tapEl(t0,id,scroll=0,dx=0){const p=P(id,scroll);tap(t0,[p[0]+dx,p[1]]);const pr=$('p-'+id);if(pr)press(pr,t0);}
 const TX=v=>({transform:`translate(${v},0)`}), TY=v=>({transform:`translate(0,${v})`});
@@ -657,7 +689,7 @@ window.render=t=>{document.getElementById('dm-root').getAnimations({subtree:true
 (function(){const go=()=>{const root=document.getElementById('dm-root');
  const imgs=[...root.querySelectorAll('img')].map(i=>i.complete?1:new Promise(r=>{i.addEventListener('load',r);i.addEventListener('error',r);}));
  const fonts=['600 20px Inter','400 20px Inter','600 40px Unbounded','400 20px "Google Sans"'].map(f=>document.fonts.load(f).catch(()=>0));
- Promise.all(imgs.concat(fonts)).then(()=>document.fonts.ready).then(()=>{build();window.render(0);window.READY=true;});};
+ Promise.all(imgs.concat(fonts)).then(()=>document.fonts.ready).then(()=>{build();dmWarp();window.render(0);window.READY=true;});};
  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',go):go();})();
 
 /* Вторая часть ролика: дилеры, сервисная история, помощь на дороге, автомобили и звонки, консультант. */
