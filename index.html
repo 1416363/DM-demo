@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Система Dealer Mobility</title>
+<title>Dealer Mobility. Возможности приложения</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Google+Sans:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap">
 <style>
 /* Сцена 1920×1080 масштабируется по ширине; справа от неё — список разделов; один общий фон */
@@ -198,7 +198,7 @@
 .grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
 .nw{display:none}
 .grid{padding-right:var(--ph,0px)}
-@media (max-width:980px){.grid{grid-template-columns:1fr;padding-right:0}.w{display:none}.nw{display:inline}}
+@media (max-width:980px){.grid{grid-template-columns:1fr;padding-right:0}.list{height:auto;margin:0;--k:.55}.w{display:none}.nw{display:inline}}
 .view{position:relative;width:100%;max-width:100%;aspect-ratio:16/9}
 .view .stage{position:absolute;left:0;top:0;right:auto;bottom:auto;width:1920px;height:1080px;transform-origin:0 0;background:transparent}
 #caps .sect{font-size:40px!important;color:var(--accent)!important;white-space:nowrap}
@@ -212,17 +212,22 @@
 .tl .fl{position:absolute;left:0;top:12px;height:4px;border-radius:2px;background:var(--accent);width:0}
 .tl .mk i{position:absolute;top:8px;width:2px;height:12px;margin-left:-1px;background:#9fb7b9}
 .tl .kb{position:absolute;top:6px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px #fff,0 1px 4px rgba(0,0,0,.25);left:0}
+.tip{position:absolute;bottom:34px;transform:translateX(-50%);background:#14282b;color:#fff;border-radius:8px;padding:8px 12px;font:400 13px/1.35 var(--cap-text);white-space:nowrap;max-width:420px;overflow:hidden;text-overflow:ellipsis;pointer-events:none;opacity:0;transition:opacity .12s}
+.tip b{font-weight:600}.tip span{display:block;color:#b9d3d5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl:hover .tip{opacity:1}
 .tlt{font:500 14px var(--cap-text);color:#5d7275;font-variant-numeric:tabular-nums;white-space:nowrap}
-.playb{position:absolute;left:0;top:880px;display:flex;align-items:center;gap:22px;border:0;background:none;padding:0;cursor:pointer;font:600 28px var(--cap-head);color:#14282b}
-.playb i{width:104px;height:104px;border-radius:50%;background:var(--accent);display:grid;place-items:center;box-shadow:0 10px 26px rgba(14,124,134,.35)}
-.playb svg{width:46px;height:46px;color:#fff}
+.playb{position:absolute;left:0;top:880px;display:flex;align-items:center;gap:22px;border:0;background:none;padding:0;cursor:pointer;font:500 30px var(--cap-text);color:var(--accent)}
+.playb i{width:104px;height:104px;border-radius:50%;background:rgba(255,255,255,.55);border:3px solid rgba(14,124,134,.55);display:grid;place-items:center;transition:background .2s,border-color .2s}
+.playb:hover i{background:rgba(14,124,134,.08);border-color:var(--accent)}
+.playb svg{width:42px;height:42px;color:var(--accent)}
 .playb:focus-visible i{outline:4px solid #14282b;outline-offset:4px}
-.list{background:#fff;border:1px solid #d9e3e4;border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:2px;margin:0;list-style:none}
-.list button{width:100%;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;padding:11px 12px;border:0;border-radius:8px;background:transparent;color:#14282b;font:500 15.5px var(--cap-text);text-align:left;cursor:pointer}
+.list{background:#fff;border:1px solid #e3ecec;border-radius:calc(24px*var(--k,.5));padding:calc(12px*var(--k,.5));display:flex;flex-direction:column;justify-content:space-between;margin:calc(51px*var(--k,.5)) 0 0;height:calc(978px*var(--k,.5));list-style:none}
+.list li{display:flex}
+.list button{width:100%;display:grid;grid-template-columns:calc(64px*var(--k,.5)) 1fr auto;align-items:center;gap:calc(16px*var(--k,.5));padding:calc(18px*var(--k,.5)) calc(20px*var(--k,.5));border:0;border-radius:calc(14px*var(--k,.5));background:transparent;color:#14282b;font:500 max(12px,calc(28px*var(--k,.5)))/1.2 var(--cap-text);text-align:left;cursor:pointer}
 .list button:hover{background:#e1f0f1}
 .list button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.list .n{font:600 14px var(--cap-head);color:var(--accent)}
-.list .t{font-variant-numeric:tabular-nums;color:#5d7275;font-size:14px}
+.list .n{font:600 max(11px,calc(24px*var(--k,.5))) var(--cap-head);color:var(--accent)}
+.list .t{font-variant-numeric:tabular-nums;color:#5d7275;font-size:max(11px,calc(24px*var(--k,.5)))}
 .list button.on{background:var(--accent);color:#fff}.list button.on .n,.list button.on .t{color:#fff}
 </style>
 
@@ -231,8 +236,8 @@
 <div id="dm-root">
 <div class="page">
  <header>
-  <h1>Система Dealer Mobility</h1>
-  <p class="lead">Демонстрация работы клиента в приложении. Нажмите на раздел (<span class="w">справа</span><span class="nw">ниже</span>), чтобы перейти к нему.</p>
+  <h1>Dealer Mobility. Возможности приложения.</h1>
+  <p class="lead">Нажмите на раздел (<span class="w">справа</span><span class="nw">ниже</span>), чтобы перейти к нему.</p>
  </header>
  <div class="grid">
   <div class="col"><div class="view" id="view">
@@ -248,7 +253,7 @@
  <div class="caps" id="caps"></div>
 </div>
 </div>
-  <div class="tlw"><div class="tl" id="tl" tabindex="0" role="slider" aria-label="Время показа"><span class="tr"></span><span class="mk" id="tlMarks"></span><span class="fl" id="tlFill"></span><span class="kb" id="tlKnob"></span></div><span class="tlt" id="tlTime">0:00</span></div></div>
+  <div class="tlw"><div class="tl" id="tl" tabindex="0" role="slider" aria-label="Время показа"><span class="tr"></span><span class="mk" id="tlMarks"></span><span class="fl" id="tlFill"></span><span class="kb" id="tlKnob"></span><span class="tip" id="tlTip"></span></div><span class="tlt" id="tlTime">0:00</span></div></div>
   <ol class="list" id="list"></ol>
  </div>
 </div>
@@ -482,10 +487,10 @@ function tap(t0,xy){const [x,y]=xy,e=$('tap');
 function press(el,t0){anim(el,t0,420,[{opacity:0},{opacity:1,offset:.3},{opacity:0}]);}
 function tapEl(t0,id,scroll=0,dx=0){const p=P(id,scroll);tap(t0,[p[0]+dx,p[1]]);const pr=$('p-'+id);if(pr)press(pr,t0);}
 const TX=v=>({transform:`translate(${v},0)`}), TY=v=>({transform:`translate(0,${v})`});
-function push(a,b,t){anim(b,t,380,[TX('100%'),TX('0')]);anim(a,t,380,[TX('0'),TX('-30%')]);}
-function pop(a,b,t){anim(a,t,380,[TX('0'),TX('100%')]);anim(b,t,380,[TX('-30%'),TX('0')]);}
-function up(b,t){anim(b,t,380,[TY('100%'),TY('0')]);}
-function down(b,t){anim(b,t,380,[TY('0'),TY('100%')]);}
+function push(a,b,t){anim(b,t,650,[TX('100%'),TX('0')]);anim(a,t,650,[TX('0'),TX('-30%')]);}
+function pop(a,b,t){anim(a,t,650,[TX('0'),TX('100%')]);anim(b,t,650,[TX('-30%'),TX('0')]);}
+function up(b,t){anim(b,t,650,[TY('100%'),TY('0')]);}
+function down(b,t){anim(b,t,650,[TY('0'),TY('100%')]);}
 function scrollY(el,t0,dur,from,to){anim(el,t0,dur,[{transform:`translateY(${-from}px)`},{transform:`translateY(${-to}px)`}],'cubic-bezier(.45,.05,.25,1)');}
 function fadeIn(el,t,d=250){anim(el,t,d,[{opacity:0},{opacity:1}]);}
 function fadeOut(el,t,d=250){anim(el,t,d,[{opacity:1},{opacity:0}]);}
@@ -497,8 +502,8 @@ let fabY=0;function fabTo(t,y){anim('fab',t,380,[{transform:`translateY(${fabY}p
 /* вкладки главного экрана */
 const PANELS=['pFeed','pSvc'];let tabCur=0;
 function tabTo(i,t){const a=PANELS[tabCur],b=PANELS[i],dir=i>tabCur?1:-1;
- anim(b,t,380,[TX(dir*100+'%'),TX('0')]);anim(a,t,380,[TX('0'),TX(-dir*100+'%')]);
- anim('uline',t,380,[{transform:`translateX(${tabCur*97.5}px)`},{transform:`translateX(${i*97.5}px)`}]);
+ anim(b,t,650,[TX(dir*100+'%'),TX('0')]);anim(a,t,650,[TX('0'),TX(-dir*100+'%')]);
+ anim('uline',t,650,[{transform:`translateX(${tabCur*97.5}px)`},{transform:`translateX(${i*97.5}px)`}]);
  if(tabCur===0&&i!==0){fadeOut('icFeed',t);fadeIn('icSvc',t);} if(tabCur!==0&&i===0){fadeOut('icSvc',t);fadeIn('icFeed',t);}
  tabCur=i;}
 /* подписи */
@@ -506,7 +511,7 @@ function sceneBlock(t0,t1,name){const s=document.createElement('div');s.classNam
  fadeIn(s,t0,400);fadeOut(s,t1-300,300);
  const p=document.createElement('div');p.className='prog';p.innerHTML='<i></i>';$('caps').appendChild(p);
  fadeIn(p,t0,400);fadeOut(p,t1-300,300);anim(p.firstChild,t0,t1-t0,[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],'linear');}
-function cap(t0,t1,html){const c=document.createElement('div');c.className='cap';c.innerHTML=html;$('caps').appendChild(c);
+window.CAPS=[];function cap(t0,t1,html){window.CAPS.push({t0:t0,t1:t1,h:html.split('<small>')[0]});const c=document.createElement('div');c.className='cap';c.innerHTML=html;$('caps').appendChild(c);
  anim(c,t0,450,[{opacity:0,transform:'translateY(24px)'},{opacity:1,transform:'none'}]);
  anim(c,t1-350,350,[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-16px)'}]);}
 function offsetIn(el,root){let y=0;while(el&&el!==root){y+=el.offsetTop;el=el.offsetParent;}return y;}
@@ -923,17 +928,17 @@ screen('chat',`<div class="nav"><span data-i="back"></span><div class="tt" style
 /* ---------------- вкладки (4 шт.) ---------------- */
 const PAN4=['pFeed','pSvc','pDl','pCar'],ICON4=['icFeed','icSvc','icFeed','icNone'];let tab4=0;
 tabTo=function(i,t){const a=PAN4[tab4],b=PAN4[i],dir=i>tab4?1:-1;
- anim(b,t,380,[TX(dir*100+'%'),TX('0')]);anim(a,t,380,[TX('0'),TX(-dir*100+'%')]);
- anim('uline',t,380,[{transform:`translateX(${tab4*97.5}px)`},{transform:`translateX(${i*97.5}px)`}]);
+ anim(b,t,650,[TX(dir*100+'%'),TX('0')]);anim(a,t,650,[TX('0'),TX(-dir*100+'%')]);
+ anim('uline',t,650,[{transform:`translateX(${tab4*97.5}px)`},{transform:`translateX(${i*97.5}px)`}]);
  if(ICON4[tab4]!==ICON4[i]){fadeOut(ICON4[tab4],t);fadeIn(ICON4[i],t);}
  tab4=i;};
 /* меню */
-function menuOpen(t){fadeIn('mdim',t,300);anim('menu',t,350,[TX('-100%'),TX('0')]);}
-function menuClose(t){fadeOut('mdim',t,250);anim('menu',t,300,[TX('0'),TX('-100%')]);}
+function menuOpen(t){fadeIn('mdim',t,450);anim('menu',t,600,[TX('-100%'),TX('0')]);}
+function menuClose(t){fadeOut('mdim',t,400);anim('menu',t,550,[TX('0'),TX('-100%')]);}
 $('phone').dataset.root=0;
 /* показать экран поверх главного без сдвига (из меню) */
-function cover(b,t){anim(b,t,380,[TX('100%'),TX('0')]);}
-function uncover(b,t){anim(b,t,380,[TX('0'),TX('100%')]);}
+function cover(b,t){anim(b,t,650,[TX('100%'),TX('0')]);}
+function uncover(b,t){anim(b,t,650,[TX('0'),TX('100%')]);}
 
 /* ---------------- сцены второй части ---------------- */
 /* 9. Дилеры */
@@ -1530,7 +1535,7 @@ build=function(){
   const W=page.clientWidth-32;      /* ширина без полей страницы по 16 */
   const wide=window.matchMedia('(min-width:981px)').matches;
   const w=wide?(W-LIST_W-GAP)/(1+PHONE_LEFT/1920):W;
-  page.style.setProperty('--ph',(PHONE_LEFT*w/1920).toFixed(1)+'px');
+  page.style.setProperty('--ph',(PHONE_LEFT*w/1920).toFixed(1)+'px');page.style.setProperty('--k',(w/1920).toFixed(4));
   stage.style.transform=`scale(${view.clientWidth/1920})`;};
  new ResizeObserver(fit).observe(page);new ResizeObserver(fit).observe(view);fit();
  const IC={play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
@@ -1566,6 +1571,12 @@ build=function(){
   tl.addEventListener('pointerdown',e=>{drag=true;wasPlaying=playing;if(playing){playing=false;cancelAnimationFrame(raf);}touched=true;tl.setPointerCapture(e.pointerId);seek(e);});
   tl.addEventListener('pointermove',e=>{if(drag)seek(e);});
   const up=()=>{if(!drag)return;drag=false;if(wasPlaying&&t<TOTAL)play();else ui();};
+  const tip=document.getElementById('tlTip'),CAPS=window.CAPS||[];
+  const tipAt=e=>{const r=tl.getBoundingClientRect(),x=Math.max(0,Math.min(r.width,e.clientX-r.left)),m=x/r.width*TOTAL;
+   let sec=CH[0];CH.forEach(c=>{if(m>=c.start)sec=c;});const cp=CAPS.find(c=>m>=c.t0&&m<c.t1);
+   tip.innerHTML=`<b>${fmt(m)}</b> · ${String(sec.n).padStart(2,'0')}. ${sec.title}`+(cp?`<span>${cp.h}</span>`:'');
+   tip.style.left=Math.max(110,Math.min(r.width-110,x))+'px';};
+  tl.addEventListener('pointermove',tipAt);tl.addEventListener('pointerenter',tipAt);
   tl.addEventListener('pointerup',up);tl.addEventListener('pointercancel',up);
   tl.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){t=Math.max(0,Math.min(TOTAL,t+(e.key==='ArrowRight'?5000:-5000)));draw();ui();e.preventDefault();}});
   draw();ui();
